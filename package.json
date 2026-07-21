@@ -1,0 +1,15 @@
+{
+  "name": "kamr",
+  "private": true,
+  "scripts": {
+    "dev:api": "pnpm --filter @kamr/api dev",
+    "dev:mobile": "pnpm --dir apps/mobile start",
+    "dev:website": "pnpm --filter @kamr/website dev",
+    "build:website": "pnpm --filter @kamr/website build",
+    "db:migrate": "pnpm --filter @kamr/api db:migrate",
+    "db:migrate:local": "pnpm --filter @kamr/api db:migrate:local"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}

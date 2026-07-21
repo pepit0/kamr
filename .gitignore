@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.wrangler/
+.expo/
+*.local
+.env
+.env.local
+.DS_Store
+*.tsbuildinfo
+agent-tools/
+.pnpm-store/

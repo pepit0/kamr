@@ -1,0 +1,26 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "kamr-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-21",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "pahl-db",
+      "database_id": "00000000-0000-0000-0000-000000000001"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "PHOTOS",
+      "bucket_name": "pahl-photos"
+    }
+  ],
+  "vars": {
+    "APP_BASE_URL": "https://kamr.app"
+  },
+  "triggers": {
+    "crons": ["0 4 * * *"]
+  }
+}

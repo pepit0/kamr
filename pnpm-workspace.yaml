@@ -1,0 +1,15 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+  - "website"
+
+nodeLinker: hoisted
+
+allowBuilds:
+  esbuild: true
+  sharp: true
+  workerd: true
+
+overrides:
+  react: 19.1.0
+  react-dom: 19.1.0

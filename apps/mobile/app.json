@@ -1,0 +1,52 @@
+{
+  "expo": {
+    "name": "Kamr",
+    "slug": "kamr",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#EDE4C8",
+    "scheme": "kamr",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#EDE4C8"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.kamr.app",
+      "backgroundColor": "#EDE4C8"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#EDE4C8",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "package": "com.kamr.app",
+      "backgroundColor": "#EDE4C8",
+      "softwareKeyboardLayoutMode": "pan",
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Kamr to access your camera to scan event QR codes."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Kamr to access your photos to upload to event albums."
+        }
+      ],
+      "expo-secure-store"
+    ]
+  }
+}
