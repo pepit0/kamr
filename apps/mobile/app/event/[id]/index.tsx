@@ -553,7 +553,14 @@ export default function EventDetailScreen() {
                               {p.displayName.slice(0, 2).toUpperCase()}
                             </Text>
                           </View>
-                          <Text style={[type.body, { color: c.text }]}>{p.displayName}</Text>
+                          <View>
+                            <Text style={[type.body, { color: c.text }]}>{p.displayName}</Text>
+                            {p.handle ? (
+                              <Text style={[type.caption, { color: c.textTer, marginTop: 2 }]}>
+                                @{p.handle}
+                              </Text>
+                            ) : null}
+                          </View>
                         </View>
                         <Pressable
                           onPress={() => {

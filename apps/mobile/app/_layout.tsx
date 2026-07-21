@@ -23,6 +23,11 @@ function RootNavigator() {
         <Stack.Screen name="admin/[code]" />
         <Stack.Screen name="event/[id]" />
         <Stack.Screen name="profile-setup" />
+        <Stack.Screen name="login" />
+        <Stack.Screen name="edit-profile" />
+        <Stack.Screen name="notifications" />
+        <Stack.Screen name="privacy" />
+        <Stack.Screen name="help" />
       </Stack>
     </>
   );

@@ -86,6 +86,8 @@ export function toParticipant(row: {
   id: string;
   event_id: string;
   display_name: string;
+  user_id?: string | null;
+  user_handle?: string | null;
   created_at: string;
   updated_at: string;
 }) {
@@ -93,6 +95,8 @@ export function toParticipant(row: {
     id: row.id,
     eventId: row.event_id,
     displayName: row.display_name,
+    userId: row.user_id ?? undefined,
+    handle: row.user_handle ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -136,6 +140,80 @@ export function jsonError(message: string, status = 400) {
 export function extractBearerToken(authHeader: string | undefined): string | null {
   if (!authHeader?.startsWith("Bearer ")) return null;
   return authHeader.slice(7).trim() || null;
+}
+
+export function extractUserToken(authHeader: string | undefined): string | null {
+  if (!authHeader?.startsWith("User ")) return null;
+  return authHeader.slice(5).trim() || null;
+}
+
+const HANDLE_PATTERN = /^[a-z0-9_]{3,20}$/;
+
+export function normalizeHandle(handle: string): string {
+  return handle.trim().toLowerCase().replace(/^@/, "");
+}
+
+export function validateHandle(handle: string): string | null {
+  const normalized = normalizeHandle(handle);
+  if (!HANDLE_PATTERN.test(normalized)) {
+    return "Handle must be 3–20 characters: lowercase letters, numbers, and underscores only";
+  }
+  return null;
+}
+
+export async function hashPassword(password: string, salt: string): Promise<string> {
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(password),
+    "PBKDF2",
+    false,
+    ["deriveBits"]
+  );
+  const hashBuffer = await crypto.subtle.deriveBits(
+    {
+      name: "PBKDF2",
+      salt: enc.encode(salt),
+      iterations: 100_000,
+      hash: "SHA-256",
+    },
+    keyMaterial,
+    256
+  );
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+export function generatePasswordSalt(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+export async function verifyPassword(
+  password: string,
+  salt: string,
+  expectedHash: string
+): Promise<boolean> {
+  const hash = await hashPassword(password, salt);
+  return hash === expectedHash;
+}
+
+export function toUser(row: {
+  id: string;
+  handle: string;
+  display_name: string;
+  created_at: string;
+}) {
+  return {
+    id: row.id,
+    handle: row.handle,
+    displayName: row.display_name,
+    createdAt: row.created_at,
+  };
 }
 
 export function parseJoinCodeFromUrl(url: string): string | null {

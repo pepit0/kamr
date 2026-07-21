@@ -7,7 +7,7 @@ import {
   saveLocalEvent,
   saveAdminRecoveryUrl,
 } from "@/lib/storage";
-import { getProfile } from "@/lib/profile";
+import { getAccount } from "@/lib/auth";
 import {
   defaultEventStartDate,
   validateEventStartAtDate,
@@ -25,8 +25,8 @@ export function CreatePage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    getProfile().then((profile) => {
-      if (!profile) navigate("/app/profile-setup", { replace: true });
+    getAccount().then((account) => {
+      if (!account) navigate("/app/profile-setup?redirect=/app/create", { replace: true });
     });
   }, [navigate]);
 

@@ -27,6 +27,8 @@ export interface Participant {
   id: string;
   eventId: string;
   displayName: string;
+  handle?: string;
+  userId?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -87,4 +89,30 @@ export interface EventDetailResponse {
 
 export interface UploadMediaRequest {
   durationMs?: number;
+}
+
+export interface User {
+  id: string;
+  handle: string;
+  displayName: string;
+  createdAt: string;
+}
+
+export interface RegisterRequest {
+  handle: string;
+  password: string;
+}
+
+export interface LoginRequest {
+  handle: string;
+  password: string;
+}
+
+export interface AuthResponse {
+  user: User;
+  userToken: string;
+}
+
+export interface UpdateUserRequest {
+  displayName?: string;
 }

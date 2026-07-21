@@ -4,7 +4,7 @@ import { Tabs, useFocusEffect, usePathname, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BottomNav } from "../../components/ui/BottomNav";
 import { Fab } from "../../components/ui/Buttons";
-import { getProfile } from "../../lib/profile";
+import { getAccount } from "../../lib/auth";
 import { useTheme } from "../../lib/theme/ThemeProvider";
 
 const TAB_BAR_CONTENT_HEIGHT = 54;
@@ -32,25 +32,25 @@ export default function TabLayout() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { c } = useTheme();
-  const [hasProfile, setHasProfile] = useState(false);
+  const [hasAccount, setHasAccount] = useState(false);
   const showFab = !pathname.includes("profile");
 
   const fabBottom = TAB_BAR_CONTENT_HEIGHT + insets.bottom + 16;
 
   useFocusEffect(
     useCallback(() => {
-      getProfile().then((profile) => setHasProfile(!!profile));
+      getAccount().then((account) => setHasAccount(!!account));
     }, [])
   );
 
   const handleCreate = () => {
-    if (!hasProfile) {
+    if (!hasAccount) {
       Alert.alert(
-        "Profile required",
-        "Create a profile before you can host an event.",
+        "Account required",
+        "Create a Kamr account before you can host an event.",
         [
           { text: "Cancel", style: "cancel" },
-          { text: "Create profile", onPress: () => router.push("/profile-setup") },
+          { text: "Create account", onPress: () => router.push("/profile-setup?redirect=/create") },
         ]
       );
       return;

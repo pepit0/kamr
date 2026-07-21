@@ -1,90 +1,104 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getLocalEvents } from "@/lib/storage";
-import { getProfile, profileInitials } from "@/lib/profile";
+import { getAccount, handleInitials, logout } from "@/lib/auth";
+import { ProfileMenuRow, ProfileStats } from "@/components/ui/ProfileMenu";
 import { ScreenHeader, PrimaryButton } from "@/components/ui/Buttons";
 import { colors, fonts } from "@/lib/theme";
 
 export function ProfilePage() {
   const navigate = useNavigate();
-  const [profile, setProfile] = useState<Awaited<ReturnType<typeof getProfile>>>(null);
+  const [account, setAccount] = useState<Awaited<ReturnType<typeof getAccount>>>(null);
   const [hostedCount, setHostedCount] = useState(0);
+  const [attendingCount, setAttendingCount] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([getProfile(), getLocalEvents()]).then(([p, events]) => {
-      setProfile(p);
+    Promise.all([getAccount(), getLocalEvents()]).then(([user, events]) => {
+      setAccount(user);
       setHostedCount(events.filter((e) => e.role === "admin").length);
+      setAttendingCount(events.filter((e) => e.role === "participant").length);
+      setLoading(false);
     });
   }, []);
+
+  const handleSignOut = async () => {
+    await logout();
+    navigate("/app", { replace: true });
+  };
+
+  if (loading) {
+    return <p style={{ color: colors.brownMuted }}>Loading…</p>;
+  }
 
   return (
     <div>
       <ScreenHeader title="profile" onBack={() => navigate("/app")} />
 
-      {!profile ? (
+      {!account ? (
         <div style={{ textAlign: "center", paddingTop: 32 }}>
-          <p style={{ fontFamily: fonts.display, fontSize: 28, marginBottom: 8 }}>no profile yet</p>
-          <p style={{ color: colors.brownMuted, marginBottom: 24 }}>
-            Create a profile so guests know who invited them to your events.
+          <div
+            style={{
+              width: 72,
+              height: 72,
+              borderRadius: "50%",
+              backgroundColor: colors.brownLight,
+              border: `2px dashed ${colors.brownBorder}`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 16px",
+              fontSize: 28,
+              color: colors.brownMuted,
+            }}
+          >
+            ?
+          </div>
+          <p style={{ fontFamily: fonts.display, fontSize: 28, marginBottom: 8 }}>no account yet</p>
+          <p style={{ color: colors.brownMuted, marginBottom: 24, lineHeight: 1.6, maxWidth: 360, margin: "0 auto 24px" }}>
+            Create a profile to have a permanent presence on Kamr. Guests don't need an account — only hosts do.
           </p>
-          <PrimaryButton label="Create profile" onClick={() => navigate("/app/profile-setup")} />
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "center" }}>
+            <PrimaryButton label="Create account" onClick={() => navigate("/app/profile-setup")} />
+            <Link to="/app/login" style={{ fontSize: 14, color: colors.brownMuted }}>
+              Already have an account? Sign in
+            </Link>
+          </div>
         </div>
       ) : (
         <div>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 32 }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", paddingBottom: 24 }}>
             <div
               style={{
-                width: 80,
-                height: 80,
+                width: 76,
+                height: 76,
                 borderRadius: "50%",
-                backgroundColor: colors.brown,
-                color: colors.cream,
+                backgroundColor: colors.brownLight,
+                border: `1px solid ${colors.brownBorder}`,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: 24,
-                fontWeight: 500,
-                overflow: "hidden",
-                marginBottom: 12,
+                fontSize: 26,
+                fontWeight: 300,
+                marginBottom: 14,
               }}
             >
-              {profile.photoUri ? (
-                <img src={profile.photoUri} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              ) : (
-                profileInitials(profile.name)
-              )}
+              {handleInitials(account.handle)}
             </div>
-            <h2 style={{ fontSize: 22, fontWeight: 500, margin: "0 0 4px" }}>{profile.name}</h2>
-            <p style={{ color: colors.brownMuted, margin: 0 }}>@{profile.handle}</p>
+            <h2 style={{ fontFamily: fonts.display, fontSize: 28, fontWeight: 700, margin: "0 0 2px" }}>
+              {account.displayName}
+            </h2>
+            <p style={{ color: colors.brownMuted, margin: 0, fontSize: 13 }}>@{account.handle}</p>
+            <ProfileStats hosting={hostedCount} attending={attendingCount} />
           </div>
 
-          <div
-            style={{
-              padding: 20,
-              borderRadius: 16,
-              border: `1px solid ${colors.brownBorder}`,
-              marginBottom: 24,
-              textAlign: "center",
-            }}
-          >
-            <div style={{ fontSize: 32, fontWeight: 500 }}>{hostedCount}</div>
-            <div style={{ fontSize: 13, color: colors.brownMuted }}>Events hosted</div>
+          <div>
+            <ProfileMenuRow label="Edit profile" onClick={() => navigate("/app/profile/edit")} />
+            <ProfileMenuRow label="Notifications" onClick={() => navigate("/app/profile/notifications")} />
+            <ProfileMenuRow label="Privacy" onClick={() => navigate("/app/profile/privacy")} />
+            <ProfileMenuRow label="Help" onClick={() => navigate("/app/profile/help")} />
+            <ProfileMenuRow label="Sign out" onClick={handleSignOut} />
           </div>
-
-          <Link
-            to="/app/profile-setup"
-            style={{
-              display: "block",
-              padding: "16px 20px",
-              borderRadius: 12,
-              border: `1px solid ${colors.brownBorder}`,
-              color: colors.brown,
-              textDecoration: "none",
-              textAlign: "center",
-            }}
-          >
-            Edit profile
-          </Link>
         </div>
       )}
     </div>

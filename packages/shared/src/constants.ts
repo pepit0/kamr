@@ -9,6 +9,7 @@ export const APP_DOMAIN = "kamr.app";
 export const APP_SCHEME = "kamr";
 export const APP_BASE_URL = `https://${APP_DOMAIN}`;
 export const STORAGE_PREFIX = "kamr:";
+export const USER_SESSION_KEY = `${STORAGE_PREFIX}user-session`;
 
 export function joinInviteUrl(inviteCode: string): string {
   return `${APP_BASE_URL}/join/${inviteCode}`;

@@ -1,14 +1,21 @@
 import type {
+  AuthResponse,
   CreateEventRequest,
   CreateEventResponse,
   EventDetailResponse,
   JoinEventRequest,
   JoinEventResponse,
+  LoginRequest,
+  RegisterRequest,
+  UpdateUserRequest,
   Album,
   Photo,
   Participant,
   Event,
+  User,
 } from "@kamr/shared";
+import { USER_SESSION_KEY } from "@kamr/shared";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:8787";
 
@@ -38,11 +45,15 @@ const REQUEST_TIMEOUT_MS = 20000;
 async function request<T>(
   path: string,
   options: RequestInit = {},
-  secret?: string
+  secret?: string,
+  withUserAuth = false
 ): Promise<T> {
   const headers = new Headers(options.headers);
   if (secret) {
     headers.set("Authorization", `Bearer ${secret}`);
+  } else if (withUserAuth) {
+    const token = await AsyncStorage.getItem(USER_SESSION_KEY);
+    if (token) headers.set("Authorization", `User ${token}`);
   }
   if (!(options.body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
@@ -96,10 +107,15 @@ export const api = {
   },
 
   joinEvent(inviteCode: string, body: JoinEventRequest) {
-    return request<JoinEventResponse>(`/events/by-code/${inviteCode}/join`, {
-      method: "POST",
-      body: JSON.stringify(body),
-    });
+    return request<JoinEventResponse>(
+      `/events/by-code/${inviteCode}/join`,
+      {
+        method: "POST",
+        body: JSON.stringify(body),
+      },
+      undefined,
+      true
+    );
   },
 
   recoverAdmin(inviteCode: string, token: string) {
@@ -200,6 +216,48 @@ export const api = {
       `/participants/${participantId}`,
       { method: "PATCH", body: JSON.stringify({ displayName }) },
       secret
+    );
+  },
+
+  checkHandleAvailable(handle: string) {
+    return request<{ available: boolean; handle?: string; error?: string }>(
+      `/auth/handles/${encodeURIComponent(handle)}/available`
+    );
+  },
+
+  register(body: RegisterRequest) {
+    return request<AuthResponse>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+  },
+
+  login(body: LoginRequest) {
+    return request<AuthResponse>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+  },
+
+  getMe() {
+    return request<{ user: User }>("/auth/me", {}, undefined, true);
+  },
+
+  updateMe(body: UpdateUserRequest) {
+    return request<{ user: User }>(
+      "/auth/me",
+      { method: "PATCH", body: JSON.stringify(body) },
+      undefined,
+      true
+    );
+  },
+
+  logout() {
+    return request<{ success: boolean }>(
+      "/auth/logout",
+      { method: "POST" },
+      undefined,
+      true
     );
   },
 };

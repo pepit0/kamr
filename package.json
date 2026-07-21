@@ -1,7 +1,6 @@
 {
   "name": "kamr",
   "private": true,
-  "packageManager": "pnpm@9.15.9",
   "scripts": {
     "dev:api": "pnpm --filter @kamr/api dev",
     "dev:mobile": "pnpm --dir apps/mobile start",

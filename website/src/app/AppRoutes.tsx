@@ -5,6 +5,13 @@ import { JoinManualPage } from "./pages/JoinManualPage";
 import { EventPage } from "./pages/EventPage";
 import { AlbumPage } from "./pages/AlbumPage";
 import { ProfilePage } from "./pages/ProfilePage";
+import { ProfileEditPage } from "./pages/ProfileEditPage";
+import {
+  ProfileNotificationsPage,
+  ProfilePrivacyPage,
+  ProfileHelpPage,
+} from "./pages/ProfileSubPages";
+import { LoginPage } from "./pages/LoginPage";
 import { ProfileSetupPage } from "./pages/ProfileSetupPage";
 
 export function AppRoutes() {
@@ -16,7 +23,12 @@ export function AppRoutes() {
       <Route path="event/:id" element={<EventPage />} />
       <Route path="event/:id/album/:albumId" element={<AlbumPage />} />
       <Route path="profile" element={<ProfilePage />} />
+      <Route path="profile/edit" element={<ProfileEditPage />} />
+      <Route path="profile/notifications" element={<ProfileNotificationsPage />} />
+      <Route path="profile/privacy" element={<ProfilePrivacyPage />} />
+      <Route path="profile/help" element={<ProfileHelpPage />} />
       <Route path="profile-setup" element={<ProfileSetupPage />} />
+      <Route path="login" element={<LoginPage />} />
     </Routes>
   );
 }

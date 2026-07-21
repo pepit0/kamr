@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import type { LocalEventEntry } from "@kamr/shared";
 import { getLocalEvents, removeLocalEvent } from "@/lib/storage";
-import { getProfile, profileInitials } from "@/lib/profile";
+import { getAccount, handleInitials } from "@/lib/auth";
 import { EventCard, SectionLabel } from "@/components/ui/EventCard";
 import { PrimaryButton } from "@/components/ui/Buttons";
 import { colors, fonts } from "@/lib/theme";
@@ -11,13 +11,11 @@ export function HomePage() {
   const navigate = useNavigate();
   const [events, setEvents] = useState<LocalEventEntry[]>([]);
   const [initials, setInitials] = useState("?");
-  const [photoUri, setPhotoUri] = useState<string | undefined>();
 
   const load = useCallback(async () => {
-    const [list, profile] = await Promise.all([getLocalEvents(), getProfile()]);
+    const [list, account] = await Promise.all([getLocalEvents(), getAccount()]);
     setEvents(list);
-    setInitials(profile ? profileInitials(profile.name) : "?");
-    setPhotoUri(profile?.photoUri);
+    setInitials(account ? handleInitials(account.handle) : "?");
   }, []);
 
   useEffect(() => {
@@ -63,11 +61,7 @@ export function HomePage() {
             overflow: "hidden",
           }}
         >
-          {photoUri ? (
-            <img src={photoUri} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-          ) : (
-            initials
-          )}
+          {initials}
         </Link>
       </div>
 

@@ -1,147 +1,113 @@
-import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  getProfile,
-  persistProfilePhoto,
-  profileInitials,
-  saveProfile,
-} from "@/lib/profile";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { api, ApiError } from "@/lib/api";
+import { register, normalizeHandleInput } from "@/lib/auth";
 import { ScreenHeader, PrimaryButton } from "@/components/ui/Buttons";
 import { FormField, StyledInput } from "@/components/ui/EventCard";
 import { colors } from "@/lib/theme";
 
 export function ProfileSetupPage() {
   const navigate = useNavigate();
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [name, setName] = useState("");
   const [handle, setHandle] = useState("");
-  const [photoUri, setPhotoUri] = useState<string | undefined>();
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    getProfile().then((profile) => {
-      if (profile) {
-        setIsEditing(true);
-        setName(profile.name);
-        setHandle(profile.handle);
-        setPhotoUri(profile.photoUri);
-      }
-    });
-  }, []);
-
-  const handlePhotoPick = async (files: FileList | null) => {
-    const file = files?.[0];
-    if (!file) return;
-    const uri = await persistProfilePhoto(file);
-    setPhotoUri(uri);
-  };
+  const [error, setError] = useState<string | null>(null);
 
   const handleSave = async () => {
-    const trimmedName = name.trim();
-    if (!trimmedName) return;
-
-    const trimmedHandle =
-      handle.trim() || trimmedName.toLowerCase().replace(/\s+/g, "");
+    const normalized = normalizeHandleInput(handle);
+    if (!normalized) {
+      setError("Choose a handle");
+      return;
+    }
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
 
     setSaving(true);
-    await saveProfile({
-      name: trimmedName,
-      handle: isEditing ? handle : trimmedHandle,
-      photoUri,
-    });
-    setSaving(false);
-    navigate(isEditing ? "/app/profile" : "/app/create", { replace: true });
+    setError(null);
+
+    try {
+      const availability = await api.checkHandleAvailable(normalized);
+      if (!availability.available) {
+        setError(availability.error ?? "That handle is already taken — try another");
+        return;
+      }
+
+      await register({ handle: normalized, password });
+      const redirect = new URLSearchParams(window.location.search).get("redirect");
+      navigate(redirect ?? "/app/create", { replace: true });
+    } catch (err) {
+      if (err instanceof ApiError && err.code === "HANDLE_TAKEN") {
+        setError("That handle is already taken — try another");
+      } else {
+        setError(err instanceof ApiError ? err.message : "Could not create account");
+      }
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <div>
-      <ScreenHeader
-        title={isEditing ? "edit profile" : "create profile"}
-        onBack={() => navigate(-1)}
-        backLabel="cancel"
-      />
+      <ScreenHeader title="create your account" onBack={() => navigate(-1)} backLabel="cancel" />
 
-      <p style={{ color: colors.brownMuted, marginBottom: 24 }}>
-        {isEditing
-          ? "Update how guests see you when you host events."
-          : "As a host, your profile is how guests know who invited them."}
+      <p style={{ color: colors.brownMuted, marginBottom: 24, lineHeight: 1.6 }}>
+        Hosts need a Kamr account for a permanent presence. Guests can join events without one.
       </p>
 
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 32 }}>
-        <button
-          type="button"
-          onClick={() => fileRef.current?.click()}
-          style={{
-            width: 88,
-            height: 88,
-            borderRadius: "50%",
-            backgroundColor: colors.brown,
-            color: colors.cream,
-            border: "none",
-            cursor: "pointer",
-            fontSize: 28,
-            overflow: "hidden",
-          }}
-        >
-          {photoUri ? (
-            <img src={photoUri} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-          ) : (
-            profileInitials(name.trim() || " ")
-          )}
-        </button>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*"
-          style={{ display: "none" }}
-          onChange={(e) => handlePhotoPick(e.target.files)}
-        />
-        <button
-          type="button"
-          onClick={() => fileRef.current?.click()}
-          style={{
-            marginTop: 8,
-            background: "none",
-            border: "none",
-            color: colors.brownMuted,
-            cursor: "pointer",
-            fontSize: 13,
-          }}
-        >
-          {photoUri ? "Change photo" : "Add photo"}
-        </button>
-      </div>
-
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        <FormField label="Your name">
+        <FormField label="Handle" hint="3–20 characters: letters, numbers, underscores">
           <StyledInput
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Full name"
+            value={handle}
+            onChange={(e) => setHandle(e.target.value.replace(/^@/, ""))}
+            placeholder="yourname"
             autoFocus
+            autoComplete="username"
           />
         </FormField>
 
-        {isEditing ? (
-          <FormField label="Handle">
-            <StyledInput value={handle} onChange={(e) => setHandle(e.target.value)} placeholder="username" />
-          </FormField>
-        ) : (
-          name.trim() && (
-            <p style={{ fontSize: 14, color: colors.brownMuted }}>
-              Your handle will be @{name.trim().toLowerCase().replace(/\s+/g, "")}
-            </p>
-          )
-        )}
+        <FormField label="Password">
+          <StyledInput
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="At least 8 characters"
+            autoComplete="new-password"
+          />
+        </FormField>
+
+        <FormField label="Confirm password">
+          <StyledInput
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Repeat password"
+            autoComplete="new-password"
+          />
+        </FormField>
+
+        {error && <p style={{ color: colors.error, fontSize: 14 }}>{error}</p>}
 
         <PrimaryButton
-          label={isEditing ? "Save changes" : "Save profile"}
+          label="Create account"
           onClick={handleSave}
-          disabled={!name.trim()}
+          disabled={!handle.trim() || !password || !confirmPassword}
           loading={saving}
           fullWidth
         />
+
+        <p style={{ textAlign: "center", fontSize: 14, color: colors.brownMuted }}>
+          Already have an account?{" "}
+          <Link to="/app/login" style={{ color: colors.brown }}>
+            Sign in
+          </Link>
+        </p>
       </div>
     </div>
   );

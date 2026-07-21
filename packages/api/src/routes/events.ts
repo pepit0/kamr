@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 
-import type { Env, AuthContext, DbEvent, DbAlbum, DbParticipant } from "../types";
+import type { Env, AuthContext, DbEvent, DbAlbum, DbParticipant, DbUser } from "../types";
 
 import {
 
@@ -25,6 +25,7 @@ import {
 } from "../utils";
 
 import { optionalAuth, requireAdmin, requireEventAccess } from "../middleware/auth";
+import { optionalUser } from "../middleware/userAuth";
 
 import { validateEventStartAt, computeEventEndAt, sanitizeFilename } from "../retention";
 
@@ -34,11 +35,13 @@ import { DEFAULT_RETENTION_DAYS, APP_BASE_URL } from "@kamr/shared";
 
 
 
-type Variables = { auth: AuthContext; event?: DbEvent };
+type Variables = { auth: AuthContext; event?: DbEvent; user?: DbUser };
 
 
 
 const events = new Hono<{ Bindings: Env; Variables: Variables }>();
+
+events.use("*", optionalUser);
 
 
 
@@ -224,9 +227,13 @@ events.post("/by-code/:inviteCode/join", async (c) => {
 
   const body = await c.req.json<{ displayName?: string }>();
 
+  const user = c.get("user") as DbUser | undefined;
+
+  const displayName = body.displayName?.trim() || user?.display_name;
 
 
-  if (!body.displayName?.trim()) {
+
+  if (!displayName) {
 
     return c.json({ error: "Display name is required" }, 400);
 
@@ -266,9 +273,9 @@ events.post("/by-code/:inviteCode/join", async (c) => {
 
   await c.env.DB.prepare(
 
-    `INSERT INTO participants (id, event_id, display_name, participant_secret_hash, created_at, updated_at)
+    `INSERT INTO participants (id, event_id, display_name, participant_secret_hash, user_id, created_at, updated_at)
 
-     VALUES (?, ?, ?, ?, ?, ?)`
+     VALUES (?, ?, ?, ?, ?, ?, ?)`
 
   )
 
@@ -278,9 +285,11 @@ events.post("/by-code/:inviteCode/join", async (c) => {
 
       event.id,
 
-      body.displayName.trim(),
+      displayName,
 
       participantSecretHash,
+
+      user?.id ?? null,
 
       timestamp,
 
@@ -298,7 +307,11 @@ events.post("/by-code/:inviteCode/join", async (c) => {
 
     event_id: event.id,
 
-    display_name: body.displayName.trim(),
+    display_name: displayName,
+
+    user_id: user?.id ?? null,
+
+    user_handle: user?.handle ?? null,
 
     created_at: timestamp,
 
@@ -630,7 +643,10 @@ events.get("/:id/participants", requireAdmin, async (c) => {
 
   const result = await c.env.DB.prepare(
 
-    "SELECT * FROM participants WHERE event_id = ? ORDER BY created_at ASC"
+    `SELECT p.*, u.handle AS user_handle
+     FROM participants p
+     LEFT JOIN users u ON u.id = p.user_id
+     WHERE p.event_id = ? ORDER BY p.created_at ASC`
 
   )
 

@@ -7,7 +7,7 @@ const INK = '#1A1209'
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false)
   const { pathname } = useLocation()
-  const isApp = pathname === '/app'
+  const isApp = pathname.startsWith('/app') || pathname.startsWith('/join') || pathname.startsWith('/admin')
 
   useEffect(() => {
     const handle = () => setScrolled(window.scrollY > 40)

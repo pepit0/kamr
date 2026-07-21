@@ -9,3 +9,5 @@ dist/
 *.tsbuildinfo
 agent-tools/
 .pnpm-store/
+.vercel
+.env*

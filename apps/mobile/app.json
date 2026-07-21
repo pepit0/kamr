@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "backgroundColor": "#EDE4C8",
     "scheme": "kamr",
     "newArchEnabled": true,
@@ -15,7 +15,11 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.kamr.app",
-      "backgroundColor": "#EDE4C8"
+      "backgroundColor": "#EDE4C8",
+      "icon": {
+        "light": "./assets/ios-icon-light.png",
+        "dark": "./assets/ios-icon-dark.png"
+      }
     },
     "android": {
       "adaptiveIcon": {

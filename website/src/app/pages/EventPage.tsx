@@ -283,7 +283,10 @@ export function EventPage() {
                 border: `1px solid ${colors.brownBorder}`,
               }}
             >
-              {p.displayName}
+              <div>{p.displayName}</div>
+              {p.handle && (
+                <div style={{ fontSize: 12, color: colors.brownMuted, marginTop: 2 }}>@{p.handle}</div>
+              )}
             </div>
           ))}
         </div>

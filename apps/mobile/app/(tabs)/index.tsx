@@ -9,7 +9,7 @@ import {
 import { useFocusEffect, useRouter } from "expo-router";
 import type { LocalEventEntry } from "@kamr/shared";
 import { getLocalEvents, removeLocalEvent } from "../../lib/storage";
-import { getProfile, profileInitials } from "../../lib/profile";
+import { getAccount, handleInitials } from "../../lib/auth";
 import { useTheme } from "../../lib/theme/ThemeProvider";
 import { type } from "../../lib/theme/typography";
 import { AppHeader } from "../../components/ui/AppHeader";
@@ -22,17 +22,15 @@ export default function HomeScreen() {
   const [events, setEvents] = useState<LocalEventEntry[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [initials, setInitials] = useState("?");
-  const [hasProfile, setHasProfile] = useState(false);
-  const [photoUri, setPhotoUri] = useState<string | undefined>();
+  const [hasAccount, setHasAccount] = useState(false);
 
   const loadEvents = useCallback(async (showRefresh = false) => {
     if (showRefresh) setRefreshing(true);
     try {
-      const [list, profile] = await Promise.all([getLocalEvents(), getProfile()]);
+      const [list, account] = await Promise.all([getLocalEvents(), getAccount()]);
       setEvents(list);
-      setInitials(profile ? profileInitials(profile.name) : "?");
-      setHasProfile(!!profile);
-      setPhotoUri(profile?.photoUri);
+      setInitials(account ? handleInitials(account.handle) : "?");
+      setHasAccount(!!account);
     } finally {
       if (showRefresh) setRefreshing(false);
     }
@@ -68,7 +66,7 @@ export default function HomeScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>
-      <AppHeader title="your events" initials={initials} photoUri={photoUri} hasProfile={hasProfile} activeTab="events" />
+      <AppHeader title="your events" initials={initials} hasProfile={hasAccount} activeTab="events" />
 
       <ScrollView
         style={{ flex: 1, backgroundColor: c.bg }}

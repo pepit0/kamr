@@ -3,12 +3,23 @@ import { Text, View } from "react-native";
 import { useTheme } from "../../lib/theme/ThemeProvider";
 import { type } from "../../lib/theme/typography";
 
-export function FormField({ label, children }: { label: string; children: ReactNode }) {
+export function FormField({
+  label,
+  hint,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  children: ReactNode;
+}) {
   const { c } = useTheme();
   return (
     <View>
       <Text style={[type.sectionLabel, { color: c.textTer, marginBottom: 8 }]}>{label}</Text>
       {children}
+      {hint ? (
+        <Text style={[type.caption, { color: c.textTer, marginTop: 6 }]}>{hint}</Text>
+      ) : null}
     </View>
   );
 }

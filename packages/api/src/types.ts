@@ -27,8 +27,18 @@ export interface DbParticipant {
   event_id: string;
   display_name: string;
   participant_secret_hash: string;
+  user_id?: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface DbUser {
+  id: string;
+  handle: string;
+  display_name: string;
+  password_hash: string;
+  password_salt: string;
+  created_at: string;
 }
 
 export interface DbPhoto {

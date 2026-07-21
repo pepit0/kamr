@@ -7,7 +7,7 @@ import {
   saveLocalEvent,
   saveAdminRecoveryUrl,
 } from "../lib/storage";
-import { getProfile } from "../lib/profile";
+import { getAccount } from "../lib/auth";
 import { useTheme } from "../lib/theme/ThemeProvider";
 import { type } from "../lib/theme/typography";
 import { ScreenHeader, PrimaryButton } from "../components/ui/Buttons";
@@ -33,9 +33,9 @@ export default function CreateEventScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      getProfile().then((profile) => {
-        if (!profile) {
-          router.replace("/profile-setup");
+      getAccount().then((account) => {
+        if (!account) {
+          router.replace("/profile-setup?redirect=/create");
         }
       });
     }, [router])
