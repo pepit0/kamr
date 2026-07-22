@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { View, Text, ActivityIndicator, Alert, Platform, Pressable } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { api, ApiError } from "../../lib/api";
-import { getAccount, login, normalizeHandleInput, resolveLoginError } from "../../lib/auth";
+import { getAccount, login, resolveLoginError, validateHandleForAccount } from "../../lib/auth";
 import { saveLocalEvent, saveParticipantSecret } from "../../lib/storage";
 import { useTheme } from "../../lib/theme/ThemeProvider";
 import { type } from "../../lib/theme/typography";
@@ -84,7 +84,12 @@ export default function JoinScreen() {
           setError("Enter your handle and password to join with your account");
           return;
         }
-        const user = await login({ handle: normalizeHandleInput(loginHandle), password: loginPassword });
+        const { normalized, error: handleError } = validateHandleForAccount(loginHandle);
+        if (handleError) {
+          setError(handleError);
+          return;
+        }
+        const user = await login({ handle: normalized, password: loginPassword });
         setAccount(user);
         await completeJoin(displayName.trim() || user.displayName);
         return;

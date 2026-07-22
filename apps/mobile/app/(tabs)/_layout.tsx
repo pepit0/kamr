@@ -1,11 +1,12 @@
 import { useCallback, useState } from "react";
-import { Alert, View } from "react-native";
+import { Alert, Pressable, Text, View } from "react-native";
 import { Tabs, useFocusEffect, usePathname, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BottomNav } from "../../components/ui/BottomNav";
-import { Fab } from "../../components/ui/Buttons";
+import { IcoPlus } from "../../components/ui/Icons";
 import { getAccount } from "../../lib/auth";
 import { useTheme } from "../../lib/theme/ThemeProvider";
+import { fonts } from "../../lib/theme/typography";
 
 const TAB_BAR_CONTENT_HEIGHT = 54;
 
@@ -72,7 +73,49 @@ export default function TabLayout() {
         <Tabs.Screen name="profile" options={{ title: "Profile" }} />
       </Tabs>
 
-      {showFab ? <Fab onPress={handleCreate} bottom={fabBottom} right={24} /> : null}
+      {showFab ? (
+        <View
+          style={{
+            position: "absolute",
+            bottom: fabBottom,
+            left: 24,
+            right: 24,
+            flexDirection: "row",
+            justifyContent: "center",
+            gap: 12,
+            zIndex: 10,
+          }}
+        >
+          <Pressable
+            onPress={() => router.push("/join")}
+            style={{
+              paddingVertical: 14,
+              paddingHorizontal: 24,
+              borderRadius: 999,
+              borderWidth: 1.5,
+              borderColor: c.text,
+              backgroundColor: "transparent",
+            }}
+          >
+            <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 15, color: c.text }}>Join event</Text>
+          </Pressable>
+          <Pressable
+            onPress={handleCreate}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+              paddingVertical: 14,
+              paddingHorizontal: 24,
+              borderRadius: 999,
+              backgroundColor: c.inv,
+            }}
+          >
+            <IcoPlus size={18} color={c.invText} />
+            <Text style={{ fontFamily: fonts.bodyMedium, fontSize: 15, color: c.invText }}>Create event</Text>
+          </Pressable>
+        </View>
+      ) : null}
     </View>
   );
 }

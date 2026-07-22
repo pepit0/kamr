@@ -487,6 +487,14 @@ function Footer() {
 // ─── Landing ──────────────────────────────────────────────────────────────────
 
 export default function Landing() {
+  const [resetKey, setResetKey] = useState(0)
+
+  useEffect(() => {
+    const onReset = () => setResetKey((k) => k + 1)
+    window.addEventListener('kamr-landing-reset', onReset)
+    return () => window.removeEventListener('kamr-landing-reset', onReset)
+  }, [])
+
   return (
     <>
       <style>{`
@@ -499,12 +507,14 @@ export default function Landing() {
           50% { transform: translateY(6px); opacity: 1; }
         }
       `}</style>
-      <Hero />
-      <UseCases />
-      <HowItWorks />
-      <InviteFeature />
-      <CTA />
-      <Footer />
+      <div key={resetKey}>
+        <Hero />
+        <UseCases />
+        <HowItWorks />
+        <InviteFeature />
+        <CTA />
+        <Footer />
+      </div>
     </>
   )
 }

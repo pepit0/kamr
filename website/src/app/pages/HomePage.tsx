@@ -5,6 +5,7 @@ import { getLocalEvents, removeLocalEvent } from "@/lib/storage";
 import { getAccount, handleInitials } from "@/lib/auth";
 import { EventCard, SectionLabel } from "@/components/ui/EventCard";
 import { PrimaryButton } from "@/components/ui/Buttons";
+import { IcoScan } from "@/components/ui/Icons";
 import { colors, fonts } from "@/lib/theme";
 
 export function HomePage() {
@@ -44,25 +45,43 @@ export function HomePage() {
         <div>
           <h1 style={{ fontFamily: fonts.display, fontSize: 36, margin: 0 }}>your events</h1>
         </div>
-        <Link
-          to="/app/profile"
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: "50%",
-            backgroundColor: colors.brown,
-            color: colors.cream,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 14,
-            fontWeight: 500,
-            textDecoration: "none",
-            overflow: "hidden",
-          }}
-        >
-          {initials}
-        </Link>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <button
+            type="button"
+            onClick={() => navigate("/app/join?scan=1")}
+            aria-label="Scan QR code"
+            title="Scan QR code"
+            style={{
+              color: colors.brownMuted,
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: 4,
+              lineHeight: 0,
+            }}
+          >
+            <IcoScan size={24} />
+          </button>
+          <Link
+            to="/app/profile"
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: "50%",
+              backgroundColor: colors.brown,
+              color: colors.cream,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 14,
+              fontWeight: 500,
+              textDecoration: "none",
+              overflow: "hidden",
+            }}
+          >
+            {initials}
+          </Link>
+        </div>
       </div>
 
       {hosted.length > 0 && (

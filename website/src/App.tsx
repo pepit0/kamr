@@ -1440,7 +1440,23 @@ function ProfileScreen({
 
 // ─── App root ─────────────────────────────────────────────────────────────────
 
-export default function App() {
+const PHONE_WIDTH = 390
+const PHONE_HEIGHT = 844
+const PHONE_BORDER_RADIUS = 50
+const ISLAND_TOP = 12
+const ISLAND_WIDTH = 126
+const ISLAND_HEIGHT = 36
+
+const phoneShellShadow = (isDark: boolean, embedded: boolean) =>
+  isDark
+    ? embedded
+      ? '0 0 0 1px rgba(255,255,255,0.06), 0 16px 48px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255,255,255,0.04)'
+      : '0 0 0 1px rgba(255,255,255,0.06), 0 30px 80px rgba(0,0,0,0.7), inset 0 0 0 1px rgba(255,255,255,0.04)'
+    : embedded
+      ? '0 0 0 1px rgba(0,0,0,0.1), 0 16px 48px rgba(0,0,0,0.15), inset 0 0 0 1px rgba(255,255,255,0.8)'
+      : '0 0 0 1px rgba(0,0,0,0.1), 0 30px 80px rgba(0,0,0,0.2), inset 0 0 0 1px rgba(255,255,255,0.8)'
+
+export default function App({ embedded = false }: { embedded?: boolean }) {
   const [isDark, setIsDark] = useState(false)
   const [screen, setScreen] = useState<Screen>('home')
   const [navTab, setNavTab] = useState<Screen>('home')
@@ -1539,25 +1555,35 @@ export default function App() {
     setSelectedEvent(null)
   }
 
-  return (
-    <ThemeCtx.Provider value={theme}>
-      <div
-        style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: c.shell, transition: 'background 0.3s' }}
-      >
-        {/* Phone shell */}
+  const phone = (
         <div
           style={{
-            position: 'relative', width: 390, height: 844,
-            borderRadius: 50, overflow: 'hidden',
+            position: 'relative',
+            width: embedded ? '100%' : PHONE_WIDTH,
+            height: embedded ? '100%' : PHONE_HEIGHT,
+            borderRadius: embedded
+              ? `${(PHONE_BORDER_RADIUS / PHONE_WIDTH) * 100}cqw`
+              : PHONE_BORDER_RADIUS,
+            overflow: 'hidden',
             background: c.bg,
-            boxShadow: isDark
-              ? '0 0 0 1px rgba(255,255,255,0.06), 0 30px 80px rgba(0,0,0,0.7), inset 0 0 0 1px rgba(255,255,255,0.04)'
-              : '0 0 0 1px rgba(0,0,0,0.1), 0 30px 80px rgba(0,0,0,0.2), inset 0 0 0 1px rgba(255,255,255,0.8)',
+            boxShadow: phoneShellShadow(isDark, embedded),
             transition: 'background 0.3s, box-shadow 0.3s',
           }}
         >
           {/* Dynamic island */}
-          <div style={{ position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)', width: 126, height: 36, borderRadius: 20, background: '#000', zIndex: 50 }} />
+          <div
+            style={{
+              position: 'absolute',
+              top: embedded ? `${(ISLAND_TOP / PHONE_HEIGHT) * 100}cqh` : ISLAND_TOP,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: embedded ? `${(ISLAND_WIDTH / PHONE_WIDTH) * 100}cqw` : ISLAND_WIDTH,
+              height: embedded ? `${(ISLAND_HEIGHT / PHONE_HEIGHT) * 100}cqh` : ISLAND_HEIGHT,
+              borderRadius: 9999,
+              background: '#000',
+              zIndex: 50,
+            }}
+          />
 
           {/* Screen content */}
           <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -1610,7 +1636,19 @@ export default function App() {
             )}
           </div>
         </div>
-      </div>
+  )
+
+  return (
+    <ThemeCtx.Provider value={theme}>
+      {embedded ? phone : (
+        <div
+          style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: c.shell, transition: 'background 0.3s' }}
+        >
+          {phone}
+        </div>
+      )}
     </ThemeCtx.Provider>
   )
 }
+
+export { PHONE_WIDTH, PHONE_HEIGHT }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type MouseEvent } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 
 const CREAM = '#F5EDDA'
@@ -7,7 +7,11 @@ const INK = '#1A1209'
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false)
   const { pathname } = useLocation()
-  const isApp = pathname.startsWith('/app') || pathname.startsWith('/join') || pathname.startsWith('/admin')
+  const isApp =
+    pathname.startsWith('/app') ||
+    pathname.startsWith('/join') ||
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/demo')
 
   useEffect(() => {
     const handle = () => setScrolled(window.scrollY > 40)
@@ -16,6 +20,14 @@ export default function Nav() {
   }, [])
 
   const solid = isApp || scrolled
+
+  const goHome = (e: MouseEvent<HTMLAnchorElement>) => {
+    if (pathname !== '/') return
+    e.preventDefault()
+    window.scrollTo(0, 0)
+    setScrolled(false)
+    window.dispatchEvent(new CustomEvent('kamr-landing-reset'))
+  }
 
   return (
     <nav
@@ -32,6 +44,7 @@ export default function Nav() {
     >
       <Link
         to="/"
+        onClick={goHome}
         style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8 }}
       >
         {/* Inline logo mark */}
@@ -57,6 +70,7 @@ export default function Nav() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <Link
           to="/"
+          onClick={goHome}
           style={{
             fontFamily: 'Jost, sans-serif', fontSize: 13, fontWeight: 400,
             color: pathname === '/' ? INK : 'rgba(26,18,9,0.5)',

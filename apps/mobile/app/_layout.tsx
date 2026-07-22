@@ -19,6 +19,7 @@ function RootNavigator() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="create" />
         <Stack.Screen name="scan" />
+        <Stack.Screen name="join/index" />
         <Stack.Screen name="join/[code]" />
         <Stack.Screen name="admin/[code]" />
         <Stack.Screen name="event/[id]" />
