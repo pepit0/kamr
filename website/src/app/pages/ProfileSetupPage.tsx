@@ -4,6 +4,7 @@ import { api, ApiError } from "@/lib/api";
 import { register, normalizeHandleInput } from "@/lib/auth";
 import { ScreenHeader, PrimaryButton } from "@/components/ui/Buttons";
 import { FormField, StyledInput } from "@/components/ui/EventCard";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { colors } from "@/lib/theme";
 
 export function ProfileSetupPage() {
@@ -73,8 +74,7 @@ export function ProfileSetupPage() {
         </FormField>
 
         <FormField label="Password">
-          <StyledInput
-            type="password"
+          <PasswordInput
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="At least 8 characters"
@@ -83,8 +83,7 @@ export function ProfileSetupPage() {
         </FormField>
 
         <FormField label="Confirm password">
-          <StyledInput
-            type="password"
+          <PasswordInput
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="Repeat password"

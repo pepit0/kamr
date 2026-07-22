@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ApiError } from "@/lib/api";
-import { login, normalizeHandleInput } from "@/lib/auth";
+import { login, normalizeHandleInput, resolveLoginError } from "@/lib/auth";
 import { ScreenHeader, PrimaryButton } from "@/components/ui/Buttons";
 import { FormField, StyledInput } from "@/components/ui/EventCard";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { colors } from "@/lib/theme";
 
 export function LoginPage() {
@@ -21,7 +21,7 @@ export function LoginPage() {
       const redirect = new URLSearchParams(window.location.search).get("redirect");
       navigate(redirect ?? "/app", { replace: true });
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Could not sign in");
+      setError(await resolveLoginError(handle, err));
     } finally {
       setLoading(false);
     }
@@ -43,8 +43,7 @@ export function LoginPage() {
         </FormField>
 
         <FormField label="Password">
-          <StyledInput
-            type="password"
+          <PasswordInput
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="current-password"

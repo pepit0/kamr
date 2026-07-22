@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api, ApiError } from "@/lib/api";
-import { getAccount, login, normalizeHandleInput } from "@/lib/auth";
+import { getAccount, login, normalizeHandleInput, resolveLoginError } from "@/lib/auth";
 import { saveLocalEvent, saveParticipantSecret } from "@/lib/storage";
 import { ScreenHeader, PrimaryButton } from "@/components/ui/Buttons";
 import { FormField, StyledInput } from "@/components/ui/EventCard";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { colors } from "@/lib/theme";
 
 type JoinMode = "guest" | "account";
@@ -90,7 +91,11 @@ export function JoinPage() {
 
       await completeJoin(displayName.trim());
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Failed to join event");
+      if (mode === "account" && !account && loginHandle.trim()) {
+        setError(await resolveLoginError(loginHandle, err));
+      } else {
+        setError(err instanceof ApiError ? err.message : "Failed to join event");
+      }
     } finally {
       setJoining(false);
     }
@@ -179,8 +184,7 @@ export function JoinPage() {
               />
             </FormField>
             <FormField label="Password">
-              <StyledInput
-                type="password"
+              <PasswordInput
                 value={loginPassword}
                 onChange={(e) => setLoginPassword(e.target.value)}
                 autoComplete="current-password"

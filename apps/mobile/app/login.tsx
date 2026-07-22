@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { View, Text, Pressable } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ApiError } from "../lib/api";
-import { login, normalizeHandleInput } from "../lib/auth";
+import { login, normalizeHandleInput, resolveLoginError } from "../lib/auth";
 import { useTheme } from "../lib/theme/ThemeProvider";
 import { type } from "../lib/theme/typography";
 import { ScreenHeader, PrimaryButton } from "../components/ui/Buttons";
 import { FormField } from "../components/ui/FormField";
 import { StyledInput } from "../components/ui/StyledInput";
+import { PasswordInput } from "../components/ui/PasswordInput";
 import { KeyboardFooter, KeyboardScreen } from "../components/ui/KeyboardScreen";
 
 export default function LoginScreen() {
@@ -26,7 +26,7 @@ export default function LoginScreen() {
       await login({ handle: normalizeHandleInput(handle), password });
       router.replace((redirect as string) ?? "/(tabs)");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Could not sign in");
+      setError(await resolveLoginError(handle, err));
     } finally {
       setLoading(false);
     }
@@ -59,10 +59,9 @@ export default function LoginScreen() {
       </FormField>
 
       <FormField label="Password">
-        <StyledInput
+        <PasswordInput
           value={password}
           onChangeText={setPassword}
-          secureTextEntry
           autoComplete="current-password"
         />
       </FormField>

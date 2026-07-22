@@ -1,5 +1,5 @@
 import type { AuthResponse, LoginRequest, RegisterRequest, User } from "@kamr/shared";
-import { USER_SESSION_KEY } from "@kamr/shared";
+import { loginFailureMessage, USER_SESSION_KEY } from "@kamr/shared";
 import { api, ApiError } from "./api";
 
 export type { User };
@@ -65,4 +65,19 @@ export function handleInitials(handle: string): string {
 
 export function normalizeHandleInput(handle: string): string {
   return handle.trim().toLowerCase().replace(/^@/, "");
+}
+
+export async function resolveLoginError(handle: string, err: unknown): Promise<string> {
+  if (!(err instanceof ApiError)) {
+    return "Could not sign in";
+  }
+  if (err.code !== "INVALID_CREDENTIALS") {
+    return err.message;
+  }
+  try {
+    const availability = await api.checkHandleAvailable(normalizeHandleInput(handle));
+    return loginFailureMessage(availability);
+  } catch {
+    return err.message;
+  }
 }

@@ -9,6 +9,7 @@ import { KamrLogo } from "../components/ui/KamrLogo";
 import { PrimaryButton } from "../components/ui/Buttons";
 import { FormField } from "../components/ui/FormField";
 import { StyledInput } from "../components/ui/StyledInput";
+import { PasswordInput } from "../components/ui/PasswordInput";
 import { KeyboardFooter, KeyboardScreen } from "../components/ui/KeyboardScreen";
 
 export default function ProfileSetupScreen() {
@@ -99,21 +100,19 @@ export default function ProfileSetupScreen() {
         </FormField>
 
         <FormField label="Password">
-          <StyledInput
+          <PasswordInput
             value={password}
             onChangeText={setPassword}
             placeholder="At least 8 characters"
-            secureTextEntry
             autoComplete="new-password"
           />
         </FormField>
 
         <FormField label="Confirm password">
-          <StyledInput
+          <PasswordInput
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             placeholder="Repeat password"
-            secureTextEntry
             autoComplete="new-password"
           />
         </FormField>

@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import { View, Text, ActivityIndicator, Alert, Platform, Pressable } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { api, ApiError } from "../../lib/api";
-import { getAccount, login, normalizeHandleInput } from "../../lib/auth";
+import { getAccount, login, normalizeHandleInput, resolveLoginError } from "../../lib/auth";
 import { saveLocalEvent, saveParticipantSecret } from "../../lib/storage";
 import { useTheme } from "../../lib/theme/ThemeProvider";
 import { type } from "../../lib/theme/typography";
 import { ScreenHeader, PrimaryButton } from "../../components/ui/Buttons";
 import { FormField } from "../../components/ui/FormField";
 import { StyledInput } from "../../components/ui/StyledInput";
+import { PasswordInput } from "../../components/ui/PasswordInput";
 import { KeyboardFooter, KeyboardScreen } from "../../components/ui/KeyboardScreen";
 import type { User } from "@kamr/shared";
 
@@ -96,7 +97,12 @@ export default function JoinScreen() {
 
       await completeJoin(displayName.trim());
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : "Failed to join event";
+      let message: string;
+      if (mode === "account" && !account && loginHandle.trim()) {
+        message = await resolveLoginError(loginHandle, err);
+      } else {
+        message = err instanceof ApiError ? err.message : "Failed to join event";
+      }
       if (Platform.OS === "web") {
         setError(message);
       } else {
@@ -207,10 +213,9 @@ export default function JoinScreen() {
             />
           </FormField>
           <FormField label="Password">
-            <StyledInput
+            <PasswordInput
               value={loginPassword}
               onChangeText={setLoginPassword}
-              secureTextEntry
               autoComplete="current-password"
             />
           </FormField>
