@@ -27,7 +27,7 @@ In Vercel → **kamr** → **Settings** → **Environment Variables**:
 
 | Name | Production value | Notes |
 |------|------------------|--------|
-| `VITE_API_URL` | `https://api.kamr.app` | Your Cloudflare Worker URL (update when API is deployed) |
+| `VITE_API_URL` | `https://kamr-api.danielsharifian.workers.dev` | Cloudflare Worker (see [CLOUDFLARE.md](./CLOUDFLARE.md)) |
 
 Apply to **Production**, **Preview**, and **Development**.
 
@@ -74,7 +74,8 @@ To manage deploys from Cursor, authenticate the Vercel plugin when prompted (**S
 
 ```
 kamr.app          → Vercel (website/dist — landing + /app)
-api.kamr.app      → Cloudflare Worker (packages/api) — set up separately
+api.kamr.app      → Cloudflare Worker (requires kamr.app zone on Cloudflare — see CLOUDFLARE.md)
+                  → Currently use kamr-api.danielsharifian.workers.dev
 ```
 
-After the API is live on Cloudflare, set `VITE_API_URL` in Vercel and redeploy.
+After the API is live on Cloudflare, set `VITE_API_URL` in Vercel and redeploy. See [CLOUDFLARE.md](./CLOUDFLARE.md) for deploy steps and `api.kamr.app` custom domain setup.

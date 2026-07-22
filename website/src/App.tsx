@@ -58,6 +58,18 @@ const useTheme = () => useContext(ThemeCtx)
 
 type Screen = 'home' | 'event' | 'create' | 'join' | 'profile' | 'profile-setup'
 
+interface MockPhoto {
+  id: string
+  url: string
+  author: string
+}
+
+interface MockAlbum {
+  id: string
+  name: string
+  photos: MockPhoto[]
+}
+
 interface AppEvent {
   id: string
   title: string
@@ -68,6 +80,7 @@ interface AppEvent {
   attendees: Array<{ id: string; name: string }>
   isHost: boolean
   inviteCode: string
+  albums: MockAlbum[]
 }
 
 interface Profile {
@@ -76,6 +89,65 @@ interface Profile {
 }
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
+
+/** Verified Unsplash CDN URLs for demo placeholders (600×600 crop). */
+const demoPhoto = (photoId: string) =>
+  `https://images.unsplash.com/${photoId}?w=600&h=600&fit=crop&auto=format&q=80`
+
+function DemoPhoto({ url, style }: { url: string; style?: React.CSSProperties }) {
+  const { c } = useTheme()
+  const [failed, setFailed] = useState(false)
+
+  if (failed) {
+    return (
+      <div
+        style={{
+          ...style,
+          background: `linear-gradient(145deg, ${c.surface} 0%, ${c.border} 100%)`,
+        }}
+      />
+    )
+  }
+
+  return (
+    <img
+      src={url}
+      alt=""
+      loading="lazy"
+      decoding="async"
+      referrerPolicy="no-referrer"
+      onError={() => setFailed(true)}
+      style={style}
+    />
+  )
+}
+
+const ROOFTOP_PHOTOS: MockPhoto[] = [
+  { id: 'p1', url: demoPhoto('photo-1534448177492-6d698f12a59a'), author: 'Marcus Webb' },
+  { id: 'p2', url: demoPhoto('photo-1511578314322-379afb476865'), author: 'Clara Bennett' },
+  { id: 'p3', url: demoPhoto('photo-1492684223066-81342ee5ff30'), author: 'Ji-Young Lee' },
+  { id: 'p4', url: demoPhoto('photo-1464366400600-7168b8af9bc3'), author: 'Rafael Pinto' },
+  { id: 'p5', url: demoPhoto('photo-1511795409834-ef04bbd61622'), author: 'Amara Kone' },
+  { id: 'p6', url: demoPhoto('photo-1529156069898-49953e39b3ac'), author: 'Priya Rao' },
+]
+
+const FILM_PHOTOS: MockPhoto[] = [
+  { id: 'f1', url: demoPhoto('photo-1485846234645-a62644f84728'), author: 'Clara Bennett' },
+  { id: 'f2', url: demoPhoto('photo-1440404653325-ab127d49abc1'), author: 'You' },
+  { id: 'f3', url: demoPhoto('photo-1478720568477-152d9b164e26'), author: 'Marcus Webb' },
+]
+
+const BRUNCH_PHOTOS: MockPhoto[] = [
+  { id: 'b1', url: demoPhoto('photo-1414235077428-338989a2e8c0'), author: 'Soren Halm' },
+  { id: 'b2', url: demoPhoto('photo-1551218808-94e220e084d2'), author: 'Priya Rao' },
+  { id: 'b3', url: demoPhoto('photo-1504674900247-0877df9cc836'), author: 'Nadia Osei' },
+  { id: 'b4', url: demoPhoto('photo-1540039155733-5bb30b53aa14'), author: 'Tom Feld' },
+]
+
+const JAZZ_PHOTOS: MockPhoto[] = [
+  { id: 'j1', url: demoPhoto('photo-1493225457124-a3eb161ffa5f'), author: 'Marcus Webb' },
+  { id: 'j2', url: demoPhoto('photo-1514525253161-7a46d19cd819'), author: 'You' },
+]
 
 const MOCK_EVENTS: AppEvent[] = [
   {
@@ -98,6 +170,11 @@ const MOCK_EVENTS: AppEvent[] = [
     ],
     isHost: true,
     inviteCode: 'kamr.app/e/rftpdusk',
+    albums: [
+      { id: 'alb-1a', name: 'Golden hour', photos: ROOFTOP_PHOTOS.slice(0, 4) },
+      { id: 'alb-1b', name: 'Group shots', photos: ROOFTOP_PHOTOS.slice(2, 6) },
+      { id: 'alb-1c', name: 'After dark', photos: [ROOFTOP_PHOTOS[0], ROOFTOP_PHOTOS[5]] },
+    ],
   },
   {
     id: '2',
@@ -113,6 +190,9 @@ const MOCK_EVENTS: AppEvent[] = [
     ],
     isHost: false,
     inviteCode: 'kamr.app/e/filmcrit',
+    albums: [
+      { id: 'alb-2a', name: 'Lobby & seats', photos: FILM_PHOTOS },
+    ],
   },
   {
     id: '3',
@@ -130,6 +210,10 @@ const MOCK_EVENTS: AppEvent[] = [
     ],
     isHost: true,
     inviteCode: 'kamr.app/e/grdnbrch',
+    albums: [
+      { id: 'alb-3a', name: 'Table spread', photos: BRUNCH_PHOTOS.slice(0, 2) },
+      { id: 'alb-3b', name: 'Park vibes', photos: BRUNCH_PHOTOS.slice(2) },
+    ],
   },
   {
     id: '4',
@@ -144,6 +228,9 @@ const MOCK_EVENTS: AppEvent[] = [
     ],
     isHost: false,
     inviteCode: 'kamr.app/e/jazzstar',
+    albums: [
+      { id: 'alb-4a', name: 'Live set', photos: JAZZ_PHOTOS },
+    ],
   },
 ]
 
@@ -590,26 +677,138 @@ function HomeScreen({
 
 // ─── Event detail ─────────────────────────────────────────────────────────────
 
+function AlbumDetailScreen({
+  album,
+  eventTitle,
+  onBack,
+}: {
+  album: MockAlbum
+  eventTitle: string
+  onBack: () => void
+}) {
+  const { c } = useTheme()
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div style={{ padding: '56px 24px 16px', borderBottom: `1px solid ${c.border}` }}>
+        <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: 4, color: c.textTer, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Jost, sans-serif', fontSize: 13, marginBottom: 14 }}>
+          <IcoChevronLeft /> {eventTitle}
+        </button>
+        <h2 style={{ fontFamily: "'Dancing Script', cursive", fontWeight: 700, fontSize: 36, lineHeight: 1.1, color: c.text }}>
+          {album.name}
+        </h2>
+        <p style={{ fontFamily: 'Jost, sans-serif', fontSize: 13, color: c.textSec, marginTop: 4 }}>
+          {album.photos.length} {album.photos.length === 1 ? 'photo' : 'photos'} from guests
+        </p>
+      </div>
+
+      <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px 32px' }}>
+        <button
+          style={{
+            width: '100%', fontFamily: 'Jost, sans-serif', fontWeight: 500, fontSize: 14,
+            background: c.inv, color: c.invText, border: 'none', borderRadius: 14,
+            padding: '14px 20px', cursor: 'pointer', marginBottom: 20,
+          }}
+        >
+          Add photos & videos
+        </button>
+
+        {album.photos.length === 0 ? (
+          <p style={{ fontFamily: 'Jost, sans-serif', fontSize: 14, color: c.textTer, textAlign: 'center', marginTop: 32 }}>
+            No photos yet. Be the first to add one!
+          </p>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+            {album.photos.map((photo) => (
+              <div key={photo.id} style={{ position: 'relative', aspectRatio: '1', borderRadius: 10, overflow: 'hidden', background: c.surface }}>
+                <DemoPhoto url={photo.url} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                <div style={{
+                  position: 'absolute', left: 0, right: 0, bottom: 0,
+                  padding: '16px 6px 5px',
+                  background: 'linear-gradient(transparent, rgba(0,0,0,0.55))',
+                }}>
+                  <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 9, fontWeight: 500, color: '#fff', lineHeight: 1.2 }}>
+                    {photo.author}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function AlbumRow({ album, onClick }: { album: MockAlbum; onClick: () => void }) {
+  const { c } = useTheme()
+  const preview = album.photos.slice(0, 3)
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        width: '100%', textAlign: 'left', cursor: 'pointer',
+        background: c.surface, border: `1px solid ${c.border}`, borderRadius: 16,
+        padding: '14px 16px', transition: 'background 0.12s',
+      }}
+      onMouseEnter={(e) => (e.currentTarget.style.background = c.surfaceActive)}
+      onMouseLeave={(e) => (e.currentTarget.style.background = c.surface)}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: preview.length ? 10 : 0 }}>
+        <span style={{ fontFamily: 'Jost, sans-serif', fontWeight: 500, fontSize: 14, color: c.text }}>{album.name}</span>
+        <span style={{ fontFamily: 'Jost, sans-serif', fontSize: 12, color: c.textTer }}>
+          {album.photos.length} {album.photos.length === 1 ? 'photo' : 'photos'}
+        </span>
+      </div>
+      {preview.length > 0 && (
+        <div style={{ display: 'flex', gap: 5 }}>
+          {preview.map((p) => (
+            <div key={p.id} style={{ flex: 1, aspectRatio: '1', borderRadius: 8, overflow: 'hidden', maxHeight: 52 }}>
+              <DemoPhoto url={p.url} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            </div>
+          ))}
+        </div>
+      )}
+    </button>
+  )
+}
+
 function EventDetailScreen({
   event,
   guestName,
   onBack,
   onRenameGuest,
   onRenameAttendee,
+  onAddAlbum,
 }: {
   event: AppEvent
   guestName?: string
   onBack: () => void
   onRenameGuest: (name: string) => void
   onRenameAttendee: (attendeeId: string, name: string) => void
+  onAddAlbum?: (name: string) => void
 }) {
   const { c, isDark } = useTheme()
-  const [tab, setTab] = useState<'info' | 'guests' | 'invite'>(event.isHost ? 'info' : 'info')
+  const [tab, setTab] = useState<'info' | 'albums' | 'guests' | 'invite'>(event.isHost ? 'info' : 'info')
+  const [selectedAlbum, setSelectedAlbum] = useState<MockAlbum | null>(null)
+  const [newAlbumName, setNewAlbumName] = useState('')
   const [copied, setCopied] = useState(false)
   const [editingName, setEditingName] = useState(false)
   const [nameInput, setNameInput] = useState(guestName ?? 'You')
   const [editingAttendeeId, setEditingAttendeeId] = useState<string | null>(null)
   const [attendeeNameInput, setAttendeeNameInput] = useState('')
+
+  if (selectedAlbum) {
+    return (
+      <AlbumDetailScreen
+        album={selectedAlbum}
+        eventTitle={event.title}
+        onBack={() => setSelectedAlbum(null)}
+      />
+    )
+  }
 
   const handleCopy = () => {
     setCopied(true)
@@ -628,11 +827,17 @@ function EventDetailScreen({
     setEditingAttendeeId(null)
   }
 
-  const tabs = event.isHost
-    ? (['info', 'guests', 'invite'] as const)
-    : (['info', 'guests'] as const)
+  const handleAddAlbum = () => {
+    if (!newAlbumName.trim() || !onAddAlbum) return
+    onAddAlbum(newAlbumName.trim())
+    setNewAlbumName('')
+  }
 
-  const tabLabel = { info: 'Details', guests: 'Guests', invite: 'Invite' }
+  const tabs = event.isHost
+    ? (['info', 'albums', 'guests', 'invite'] as const)
+    : (['info', 'albums', 'guests'] as const)
+
+  const tabLabel = { info: 'Details', albums: 'Albums', guests: 'Guests', invite: 'Invite' }
 
   const shareOptions = [
     { label: 'QR Code', sub: 'display to scan', icon: '⬛' },
@@ -711,6 +916,49 @@ function EventDetailScreen({
             <InfoRow icon={<IcoPin />} label="Location" value={event.location} />
             <InfoRow icon={<IcoPerson />} label="Host" value={event.hostName} />
             <InfoRow icon={<IcoGroup />} label="Guests" value={`${event.attendees.length} attending`} />
+          </div>
+        )}
+
+        {tab === 'albums' && (
+          <div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
+              {event.albums.map((album) => (
+                <AlbumRow key={album.id} album={album} onClick={() => setSelectedAlbum(album)} />
+              ))}
+              {event.albums.length === 0 && (
+                <p style={{ fontFamily: 'Jost, sans-serif', fontSize: 14, color: c.textTer, textAlign: 'center' }}>
+                  No albums yet.
+                </p>
+              )}
+            </div>
+
+            {event.isHost && onAddAlbum && (
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  value={newAlbumName}
+                  onChange={(e) => setNewAlbumName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddAlbum()}
+                  placeholder="New album name"
+                  style={{
+                    flex: 1, background: c.surface, border: `1px solid ${c.border}`, borderRadius: 12,
+                    padding: '10px 14px', fontFamily: 'Jost, sans-serif', fontSize: 14, color: c.text, outline: 'none',
+                  }}
+                />
+                <button
+                  onClick={handleAddAlbum}
+                  disabled={!newAlbumName.trim()}
+                  style={{
+                    fontFamily: 'Jost, sans-serif', fontWeight: 500, fontSize: 14,
+                    background: newAlbumName.trim() ? c.inv : c.surface,
+                    color: newAlbumName.trim() ? c.invText : c.textTer,
+                    border: 'none', borderRadius: 12, padding: '10px 18px',
+                    cursor: newAlbumName.trim() ? 'pointer' : 'default',
+                  }}
+                >
+                  Add
+                </button>
+              </div>
+            )}
           </div>
         )}
 
@@ -829,6 +1077,7 @@ function CreateEventScreen({ onBack, onCreate }: { onBack: () => void; onCreate:
       attendees: [],
       isHost: true,
       inviteCode: `kamr.app/e/${Math.random().toString(36).slice(2, 9)}`,
+      albums: [],
     })
   }
 
@@ -1274,6 +1523,16 @@ export default function App() {
     }
   }
 
+  const handleAddAlbum = (eventId: string, name: string) => {
+    const newAlbum: MockAlbum = { id: `alb-${Date.now()}`, name, photos: [] }
+    setEvents((prev) =>
+      prev.map((e) => (e.id === eventId ? { ...e, albums: [...e.albums, newAlbum] } : e)),
+    )
+    if (selectedEvent?.id === eventId) {
+      setSelectedEvent((prev) => prev ? { ...prev, albums: [...prev.albums, newAlbum] } : prev)
+    }
+  }
+
   const handleNavChange = (s: Screen) => {
     setNavTab(s)
     setScreen(s)
@@ -1327,6 +1586,7 @@ export default function App() {
                   onBack={handleBack}
                   onRenameGuest={(name) => handleRenameGuest(selectedEvent.id, name)}
                   onRenameAttendee={(id, name) => handleRenameAttendee(selectedEvent.id, id, name)}
+                  onAddAlbum={(name) => handleAddAlbum(selectedEvent.id, name)}
                 />
               )}
               {screen === 'create' && (

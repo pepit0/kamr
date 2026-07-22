@@ -7,7 +7,8 @@
     "dev:website": "pnpm --filter @kamr/website dev",
     "build:website": "pnpm --filter @kamr/website build",
     "db:migrate": "pnpm --filter @kamr/api db:migrate",
-    "db:migrate:local": "pnpm --filter @kamr/api db:migrate:local"
+    "db:migrate:local": "pnpm --filter @kamr/api db:migrate:local",
+    "deploy:api": "pnpm --filter @kamr/api run deploy"
   },
   "devDependencies": {
     "typescript": "^5.7.3"

@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "node ../../node_modules/wrangler/bin/wrangler.js dev --ip 0.0.0.0 --port 8787",
     "deploy": "node ../../node_modules/wrangler/bin/wrangler.js deploy",
+    "deploy:setup-r2": "node ../../node_modules/wrangler/bin/wrangler.js r2 bucket create pahl-photos",
     "db:migrate": "node ../../node_modules/wrangler/bin/wrangler.js d1 migrations apply pahl-db --remote",
     "db:migrate:local": "node ../../node_modules/wrangler/bin/wrangler.js d1 migrations apply pahl-db --local",
     "types": "wrangler types"

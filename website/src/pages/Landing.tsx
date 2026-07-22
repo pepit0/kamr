@@ -224,12 +224,14 @@ function Hero() {
           >
             Open App
           </button>
-          <a
-            href="#how"
-            style={{ fontFamily: 'Jost, sans-serif', fontWeight: 400, fontSize: 14, color: INK2, border: `1px solid ${CREAM3}`, padding: '14px 34px', borderRadius: 999, cursor: 'pointer', textDecoration: 'none', letterSpacing: '0.02em', transition: 'border-color 0.2s' }}
+          <button
+            onClick={() => navigate('/demo')}
+            style={{ fontFamily: 'Jost, sans-serif', fontWeight: 400, fontSize: 14, color: INK2, background: 'transparent', border: `1px solid ${CREAM3}`, padding: '14px 34px', borderRadius: 999, cursor: 'pointer', letterSpacing: '0.02em', transition: 'border-color 0.2s' }}
+            onMouseEnter={e => (e.currentTarget.style.borderColor = INK2)}
+            onMouseLeave={e => (e.currentTarget.style.borderColor = CREAM3)}
           >
             See how it works
-          </a>
+          </button>
         </div>
 
         {/* Phone mockup */}
