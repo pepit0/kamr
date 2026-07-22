@@ -16,7 +16,7 @@ import QRCode from "react-native-qrcode-svg";
 import * as Clipboard from "expo-clipboard";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import type { Album, EventDetailResponse, Participant } from "@kamr/shared";
-import { APP_NAME, joinInviteUrl } from "@kamr/shared";
+import { APP_NAME, joinInviteUrl, parseEventStartAt } from "@kamr/shared";
 import { api, ApiError } from "../../../lib/api";
 import {
   getAnyEventSecret,
@@ -96,7 +96,7 @@ export default function EventDetailScreen() {
       setDetail(result);
       setRole(local?.role ?? result.role);
       setSecret(eventSecret);
-      setEditStartAt(new Date(result.event.startAt));
+      setEditStartAt(parseEventStartAt(result.event.startAt));
       setEditDisplayName(result.participant?.displayName ?? local?.displayName ?? "");
       setNameInput(result.participant?.displayName ?? local?.displayName ?? "");
 

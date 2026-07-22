@@ -37,6 +37,9 @@ import { DEFAULT_RETENTION_DAYS, APP_BASE_URL } from "@kamr/shared";
 
 type Variables = { auth: AuthContext; event?: DbEvent; user?: DbUser };
 
+const EVENT_COLUMNS =
+  "id, name, start_at, end_at, invite_code, created_at, retention_days";
+
 
 
 const events = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -197,7 +200,7 @@ events.get("/by-code/:inviteCode", async (c) => {
 
   const event = await c.env.DB.prepare(
 
-    "SELECT id, name, end_at, invite_code, created_at, retention_days FROM events WHERE invite_code = ?"
+    `SELECT ${EVENT_COLUMNS} FROM events WHERE invite_code = ?`
 
   )
 
@@ -243,7 +246,7 @@ events.post("/by-code/:inviteCode/join", async (c) => {
 
   const event = await c.env.DB.prepare(
 
-    "SELECT id, name, end_at, invite_code, created_at, retention_days FROM events WHERE invite_code = ?"
+    `SELECT ${EVENT_COLUMNS} FROM events WHERE invite_code = ?`
 
   )
 
@@ -399,7 +402,7 @@ events.get("/:id", requireEventAccess, async (c) => {
 
   const event = await c.env.DB.prepare(
 
-    "SELECT id, name, end_at, invite_code, created_at, retention_days FROM events WHERE id = ?"
+    `SELECT ${EVENT_COLUMNS} FROM events WHERE id = ?`
 
   )
 

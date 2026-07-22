@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import type { Album, EventDetailResponse, Participant } from "@kamr/shared";
-import { joinInviteUrl, parseLocalDateTimeInput, toLocalDateTimeInputValue } from "@kamr/shared";
+import { joinInviteUrl, parseEventStartAt, parseLocalDateTimeInput, toLocalDateTimeInputValue } from "@kamr/shared";
 import { api, ApiError } from "@/lib/api";
 import { getAnyEventSecret, getLocalEvents, saveLocalEvent } from "@/lib/storage";
 import {
@@ -54,7 +54,7 @@ export function EventPage() {
       setDetail(result);
       setRole(local?.role ?? result.role);
       setSecret(eventSecret);
-      setEditStartAt(toLocalDateTimeInputValue(new Date(result.event.startAt)));
+      setEditStartAt(toLocalDateTimeInputValue(parseEventStartAt(result.event.startAt)));
       setEditName(result.event.name);
 
       if (local?.role === "admin" || result.role === "admin") {
