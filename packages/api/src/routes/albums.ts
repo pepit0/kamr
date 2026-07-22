@@ -12,6 +12,8 @@ import { deletePhotoMedia } from "../cron";
 
 import { buildMediaZip, zipResponse } from "../zip";
 
+import { resolveUploadParticipantId } from "../upload-auth";
+
 
 
 type Variables = { auth: AuthContext; event?: { start_at: string | null; end_at: string; created_at: string } };
@@ -295,7 +297,7 @@ albums.post("/:id/photos", authAlbumAccess, async (c) => {
 
 
 
-  const participantId = auth.participantId;
+  const participantId = await resolveUploadParticipantId(c.env, event.id, auth);
 
   if (!participantId) {
 

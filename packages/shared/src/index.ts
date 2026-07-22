@@ -68,6 +68,8 @@ export interface CreateEventRequest {
 export interface CreateEventResponse {
   event: Event;
   adminSecret: string;
+  participantSecret: string;
+  hostParticipant: Participant;
   inviteCode: string;
   inviteUrl: string;
   adminRecoveryUrl: string;

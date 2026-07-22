@@ -41,12 +41,14 @@ export class ApiError extends Error {
 }
 
 const REQUEST_TIMEOUT_MS = 20000;
+const UPLOAD_TIMEOUT_MS = 120_000;
 
 async function request<T>(
   path: string,
   options: RequestInit = {},
   secret?: string,
-  withUserAuth = false
+  withUserAuth = false,
+  timeoutMs = REQUEST_TIMEOUT_MS
 ): Promise<T> {
   const headers = new Headers(options.headers);
   if (secret) {
@@ -60,7 +62,7 @@ async function request<T>(
   }
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const response = await fetch(`${getApiUrl()}${path}`, {
@@ -105,10 +107,15 @@ async function request<T>(
 
 export const api = {
   createEvent(body: CreateEventRequest) {
-    return request<CreateEventResponse>("/events", {
-      method: "POST",
-      body: JSON.stringify(body),
-    });
+    return request<CreateEventResponse>(
+      "/events",
+      {
+        method: "POST",
+        body: JSON.stringify(body),
+      },
+      undefined,
+      true
+    );
   },
 
   getEventByCode(inviteCode: string) {
@@ -211,7 +218,9 @@ export const api = {
     return request<{ photo: Photo }>(
       `/albums/${albumId}/photos`,
       { method: "POST", body: formData },
-      secret
+      secret,
+      false,
+      UPLOAD_TIMEOUT_MS
     );
   },
 

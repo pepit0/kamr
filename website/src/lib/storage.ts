@@ -80,3 +80,10 @@ export async function getAnyEventSecret(eventId: string): Promise<string | null>
   if (admin) return admin;
   return getParticipantSecret(eventId);
 }
+
+/** Prefer participant secret — required for uploads; admin secret works for viewing/admin ops. */
+export async function getUploadSecret(eventId: string): Promise<string | null> {
+  const participant = await getParticipantSecret(eventId);
+  if (participant) return participant;
+  return getAdminSecret(eventId);
+}

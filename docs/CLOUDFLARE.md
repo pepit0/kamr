@@ -70,6 +70,22 @@ Recommended setup:
 
 Until that migration, use the `workers.dev` URL above — it is fully functional for auth, events, and albums (photos after R2 is enabled).
 
+## Live release checklist
+
+Before going live, confirm:
+
+| Check | How |
+|-------|-----|
+| R2 enabled | Cloudflare dashboard → R2; bucket `pahl-photos` exists |
+| API deployed | `npx pnpm deploy:api` → `GET /health` returns `{"status":"ok"}` |
+| Vercel env | `VITE_API_URL=https://kamr-api.danielsharifian.workers.dev` on Production |
+| Website deployed | Push to `main` or redeploy on Vercel after env/build changes |
+| Upload test | Create event → add album → upload photo while event is active |
+
+**Upload rules:** Photos/videos can only be uploaded while the event is **active** (between start time and end time, up to 7 days). Hosts are auto-joined as participants on create so they can upload. Guests need to join via invite link first.
+
+**Your action:** Push this repo to `main` so Vercel picks up the website changes. The API is already deployed when you run `deploy:api`.
+
 ## Troubleshooting
 
 | Symptom | Cause | Fix |

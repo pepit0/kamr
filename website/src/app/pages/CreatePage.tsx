@@ -6,6 +6,7 @@ import {
   saveAdminSecret,
   saveLocalEvent,
   saveAdminRecoveryUrl,
+  saveParticipantSecret,
 } from "@/lib/storage";
 import { getAccount } from "@/lib/auth";
 import {
@@ -54,11 +55,13 @@ export function CreatePage() {
       const result = await api.createEvent({ name: name.trim(), startAt: startAt.toISOString() });
       await Promise.all([
         saveAdminSecret(result.event.id, result.adminSecret),
+        saveParticipantSecret(result.event.id, result.participantSecret),
         saveAdminRecoveryUrl(result.event.id, result.adminRecoveryUrl),
       ]);
       await saveLocalEvent({
         eventId: result.event.id,
         role: "admin",
+        displayName: result.hostParticipant.displayName,
         eventName: result.event.name,
         inviteCode: result.inviteCode,
         startAt: result.event.startAt,

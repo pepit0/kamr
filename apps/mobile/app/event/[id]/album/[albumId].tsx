@@ -17,7 +17,7 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { MAX_VIDEO_DURATION_SEC } from "@kamr/shared";
 import type { Photo } from "@kamr/shared";
 import { api, ApiError, photoContentUrl } from "../../../../lib/api";
-import { getAnyEventSecret, getLocalEvents } from "../../../../lib/storage";
+import { getAnyEventSecret, getUploadSecret } from "../../../../lib/storage";
 import { isEventActive } from "../../../../lib/event-status";
 import { downloadAlbumZip, downloadMedia } from "../../../../lib/download";
 import { handleExpiredEvent, isEventExpiredError } from "../../../../lib/event-errors";
@@ -69,8 +69,8 @@ export default function AlbumScreen() {
   const { c } = useTheme();
 
   const [photos, setPhotos] = useState<Photo[]>([]);
-  const [secret, setSecret] = useState<string | null>(null);
-  const [role, setRole] = useState<"admin" | "participant" | null>(null);
+  const [viewSecret, setViewSecret] = useState<string | null>(null);
+  const [uploadSecret, setUploadSecret] = useState<string | null>(null);
   const [eventStartAt, setEventStartAt] = useState<string | null>(null);
   const [eventEndAt, setEventEndAt] = useState<string | null>(null);
   const [albumName, setAlbumName] = useState("album");
@@ -84,15 +84,14 @@ export default function AlbumScreen() {
     setRefreshing(true);
     try {
       const eventSecret = await getAnyEventSecret(eventId);
+      const uploadKey = await getUploadSecret(eventId);
       if (!eventSecret) {
         Alert.alert("Access lost", "Rejoin the event to view this album.");
         return;
       }
 
-      const localEvents = await getLocalEvents();
-      const local = localEvents.find((e) => e.eventId === eventId);
-      setRole(local?.role ?? null);
-      setSecret(eventSecret);
+      setViewSecret(eventSecret);
+      setUploadSecret(uploadKey ?? eventSecret);
 
       const eventDetail = await api.getEvent(eventId, eventSecret);
       setEventStartAt(eventDetail.event.startAt);
@@ -120,7 +119,7 @@ export default function AlbumScreen() {
     }, [loadPhotos])
   );
 
-  const authHeaders = secret ? { Authorization: `Bearer ${secret}` } : undefined;
+  const authHeaders = viewSecret ? { Authorization: `Bearer ${viewSecret}` } : undefined;
 
   const getMediaUri = (photo: Photo, thumbnail = false) => {
     const path = thumbnail && photo.thumbnailUrl ? photo.thumbnailUrl : photo.url;
@@ -129,7 +128,7 @@ export default function AlbumScreen() {
   };
 
   const handleUpload = async () => {
-    if (!secret || !eventStartAt || !eventEndAt) return;
+    if (!uploadSecret || !eventStartAt || !eventEndAt) return;
 
     if (!isEventActive(eventStartAt, eventEndAt)) {
       Alert.alert(
@@ -137,14 +136,6 @@ export default function AlbumScreen() {
         new Date(eventStartAt).getTime() > Date.now()
           ? "This event has not started yet."
           : "This event has ended. Uploads are disabled."
-      );
-      return;
-    }
-
-    if (role !== "participant") {
-      Alert.alert(
-        "Participants only",
-        "Only event participants can upload. Join as a guest to add photos and videos."
       );
       return;
     }
@@ -175,7 +166,7 @@ export default function AlbumScreen() {
     setUploading(true);
 
     try {
-      await api.uploadMedia(albumId as string, secret, asset.uri, mimeType, {
+      await api.uploadMedia(albumId as string, uploadSecret, asset.uri, mimeType, {
         durationMs: isVideo ? (asset.duration ?? 0) * 1000 : undefined,
         filename: isVideo ? "video.mp4" : "photo.jpg",
       });
@@ -188,10 +179,10 @@ export default function AlbumScreen() {
   };
 
   const handleDownloadAlbum = async () => {
-    if (!secret) return;
+    if (!viewSecret) return;
     setDownloading(true);
     try {
-      await downloadAlbumZip(albumId as string, secret, albumName);
+      await downloadAlbumZip(albumId as string, viewSecret, albumName);
     } catch (err) {
       Alert.alert("Error", err instanceof Error ? err.message : "Download failed");
     } finally {
@@ -200,10 +191,10 @@ export default function AlbumScreen() {
   };
 
   const handleDownloadItem = async (item: Photo) => {
-    if (!secret) return;
+    if (!viewSecret) return;
     const ext = item.mimeType.includes("video") ? "mp4" : "jpg";
     try {
-      await downloadMedia(item.id, secret, `${item.mediaType}-${item.id}.${ext}`);
+      await downloadMedia(item.id, viewSecret, `${item.mediaType}-${item.id}.${ext}`);
     } catch (err) {
       Alert.alert("Error", err instanceof Error ? err.message : "Download failed");
     }
@@ -218,8 +209,8 @@ export default function AlbumScreen() {
   }
 
   const canUpload =
-    eventStartAt && eventEndAt
-      ? isEventActive(eventStartAt, eventEndAt) && role === "participant"
+    eventStartAt && eventEndAt && uploadSecret
+      ? isEventActive(eventStartAt, eventEndAt)
       : false;
 
   return (

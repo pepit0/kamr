@@ -25,7 +25,7 @@ import {
 } from "../utils";
 
 import { optionalAuth, requireAdmin, requireEventAccess } from "../middleware/auth";
-import { optionalUser } from "../middleware/userAuth";
+import { getUser, optionalUser, requireUser } from "../middleware/userAuth";
 
 import { validateEventStartAt, computeEventEndAt, sanitizeFilename } from "../retention";
 
@@ -48,9 +48,10 @@ events.use("*", optionalUser);
 
 
 
-events.post("/", async (c) => {
+events.post("/", requireUser, async (c) => {
 
   const body = await c.req.json<{ name?: string; startAt?: string }>();
+  const user = getUser(c);
 
   if (!body.name?.trim()) {
 
@@ -168,6 +169,44 @@ events.post("/", async (c) => {
 
 
 
+  const participantId = generateId();
+
+  const participantSecret = generateSecret();
+
+  const participantSecretHash = await hashSecret(participantSecret);
+
+
+
+  await c.env.DB.prepare(
+
+    `INSERT INTO participants (id, event_id, display_name, participant_secret_hash, user_id, created_at, updated_at)
+
+     VALUES (?, ?, ?, ?, ?, ?, ?)`
+
+  )
+
+    .bind(
+
+      participantId,
+
+      id,
+
+      user.display_name,
+
+      participantSecretHash,
+
+      user.id,
+
+      createdAt,
+
+      createdAt
+
+    )
+
+    .run();
+
+
+
   const baseUrl = c.env.APP_BASE_URL || APP_BASE_URL;
 
   const inviteUrl = `${baseUrl}/join/${inviteCode}`;
@@ -181,6 +220,24 @@ events.post("/", async (c) => {
     event: toEvent(event),
 
     adminSecret,
+
+    participantSecret,
+
+    hostParticipant: toParticipant({
+
+      id: participantId,
+
+      event_id: id,
+
+      display_name: user.display_name,
+
+      user_id: user.id,
+
+      created_at: createdAt,
+
+      updated_at: createdAt,
+
+    }),
 
     inviteCode,
 

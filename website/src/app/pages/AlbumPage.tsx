@@ -3,7 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import type { Photo } from "@kamr/shared";
 import { MAX_VIDEO_DURATION_SEC } from "@kamr/shared";
 import { api, ApiError } from "@/lib/api";
-import { getAnyEventSecret } from "@/lib/storage";
+import { getAnyEventSecret, getUploadSecret } from "@/lib/storage";
+import { isEventActive } from "@/lib/event-status";
 import { ScreenHeader, PrimaryButton } from "@/components/ui/Buttons";
 import { AuthImage, AuthVideo } from "@/components/ui/AuthImage";
 import { colors } from "@/lib/theme";
@@ -15,7 +16,10 @@ export function AlbumPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [photos, setPhotos] = useState<Photo[]>([]);
-  const [secret, setSecret] = useState<string | null>(null);
+  const [viewSecret, setViewSecret] = useState<string | null>(null);
+  const [uploadSecret, setUploadSecret] = useState<string | null>(null);
+  const [eventStartAt, setEventStartAt] = useState<string | null>(null);
+  const [eventEndAt, setEventEndAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,11 +29,18 @@ export function AlbumPage() {
     setError(null);
     try {
       const eventSecret = await getAnyEventSecret(eventId);
+      const uploadKey = await getUploadSecret(eventId);
       if (!eventSecret) {
         navigate("/app", { replace: true });
         return;
       }
-      setSecret(eventSecret);
+      setViewSecret(eventSecret);
+      setUploadSecret(uploadKey ?? eventSecret);
+
+      const eventDetail = await api.getEvent(eventId, eventSecret);
+      setEventStartAt(eventDetail.event.startAt);
+      setEventEndAt(eventDetail.event.endAt);
+
       const result = await api.getPhotos(albumId!, eventSecret);
       setPhotos(result.photos);
     } catch (err) {
@@ -43,8 +54,22 @@ export function AlbumPage() {
     loadPhotos();
   }, [loadPhotos]);
 
+  const canUpload =
+    eventStartAt && eventEndAt && uploadSecret
+      ? isEventActive(eventStartAt, eventEndAt)
+      : false;
+
   const handleUpload = async (files: FileList | null) => {
-    if (!files?.length || !secret) return;
+    if (!files?.length || !uploadSecret) return;
+
+    if (!canUpload) {
+      setError(
+        eventStartAt && new Date(eventStartAt).getTime() > Date.now()
+          ? "This event has not started yet."
+          : "This event has ended. Uploads are disabled."
+      );
+      return;
+    }
 
     setUploading(true);
     setError(null);
@@ -58,7 +83,7 @@ export function AlbumPage() {
             throw new Error(`Videos must be ${MAX_VIDEO_DURATION_SEC / 60} minutes or less`);
           }
         }
-        await api.uploadMedia(albumId!, secret, file, { durationMs });
+        await api.uploadMedia(albumId!, uploadSecret, file, { durationMs });
       }
       await loadPhotos();
     } catch (err) {
@@ -73,22 +98,30 @@ export function AlbumPage() {
     <div>
       <ScreenHeader title="album" onBack={() => navigate(`/app/event/${eventId}`)} />
 
-      <div style={{ marginBottom: 20 }}>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*,video/*"
-          multiple
-          style={{ display: "none" }}
-          onChange={(e) => handleUpload(e.target.files)}
-        />
-        <PrimaryButton
-          label={uploading ? "Uploading…" : "Add photos & videos"}
-          onClick={() => fileInputRef.current?.click()}
-          loading={uploading}
-          fullWidth
-        />
-      </div>
+      {canUpload ? (
+        <div style={{ marginBottom: 20 }}>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*,video/*"
+            multiple
+            style={{ display: "none" }}
+            onChange={(e) => handleUpload(e.target.files)}
+          />
+          <PrimaryButton
+            label={uploading ? "Uploading…" : "Add photos & videos"}
+            onClick={() => fileInputRef.current?.click()}
+            loading={uploading}
+            fullWidth
+          />
+        </div>
+      ) : eventStartAt && eventEndAt ? (
+        <p style={{ color: colors.brownMuted, fontSize: 14, marginBottom: 20 }}>
+          {new Date(eventStartAt).getTime() > Date.now()
+            ? "Event has not started yet — uploads open when it begins."
+            : "Event ended — viewing only."}
+        </p>
+      ) : null}
 
       {error && <p style={{ color: colors.error, marginBottom: 16 }}>{error}</p>}
 
@@ -107,7 +140,7 @@ export function AlbumPage() {
           }}
         >
           {photos.map((photo) => (
-            <MediaTile key={photo.id} photo={photo} secret={secret!} />
+            <MediaTile key={photo.id} photo={photo} secret={viewSecret!} />
           ))}
         </div>
       )}
