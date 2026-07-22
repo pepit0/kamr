@@ -6,12 +6,23 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div
       style={{
         minHeight: "100vh",
+        width: "100%",
+        maxWidth: "100%",
+        overflowX: "hidden",
         backgroundColor: colors.cream,
         color: colors.brown,
         paddingTop: 64,
       }}
     >
-      <div style={{ maxWidth: 720, margin: "0 auto", padding: "24px 24px 48px" }}>
+      <div
+        style={{
+          maxWidth: 720,
+          width: "100%",
+          margin: "0 auto",
+          padding: "24px 16px 48px",
+          boxSizing: "border-box",
+        }}
+      >
         {children}
       </div>
     </div>

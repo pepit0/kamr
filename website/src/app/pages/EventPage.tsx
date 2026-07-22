@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import type { Album, EventDetailResponse, Participant } from "@kamr/shared";
-import { joinInviteUrl } from "@kamr/shared";
+import { joinInviteUrl, parseLocalDateTimeInput, toLocalDateTimeInputValue } from "@kamr/shared";
 import { api, ApiError } from "@/lib/api";
 import { getAnyEventSecret, getLocalEvents, saveLocalEvent } from "@/lib/storage";
 import {
@@ -54,7 +54,7 @@ export function EventPage() {
       setDetail(result);
       setRole(local?.role ?? result.role);
       setSecret(eventSecret);
-      setEditStartAt(toLocalInputValue(new Date(result.event.startAt)));
+      setEditStartAt(toLocalDateTimeInputValue(new Date(result.event.startAt)));
       setEditName(result.event.name);
 
       if (local?.role === "admin" || result.role === "admin") {
@@ -101,7 +101,11 @@ export function EventPage() {
 
   const handleSaveEvent = async () => {
     if (!secret || !detail) return;
-    const startAt = new Date(editStartAt);
+    const startAt = parseLocalDateTimeInput(editStartAt);
+    if (!startAt) {
+      setError("Enter a valid start date and time");
+      return;
+    }
     const validation = validateEventStartAtDate(startAt);
     if (validation) {
       setError(validation);
@@ -180,6 +184,8 @@ export function EventPage() {
           marginBottom: 24,
           borderBottom: `1px solid ${colors.brownBorder}`,
           overflowX: "auto",
+          maxWidth: "100%",
+          WebkitOverflowScrolling: "touch",
         }}
       >
         {tabs
@@ -221,11 +227,13 @@ export function EventPage() {
                   onChange={(e) => setEditStartAt(e.target.value)}
                   style={{
                     width: "100%",
+                    maxWidth: "100%",
+                    boxSizing: "border-box",
                     padding: "14px 16px",
                     borderRadius: 12,
                     border: `1px solid ${colors.brownBorder}`,
                     backgroundColor: "rgba(255,255,255,0.35)",
-                    fontSize: 15,
+                    fontSize: 16,
                   }}
                 />
               </FormField>
@@ -347,9 +355,4 @@ function AlbumRow({ album, onClick }: { album: Album; onClick: () => void }) {
       {album.name}
     </button>
   );
-}
-
-function toLocalInputValue(date: Date): string {
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }

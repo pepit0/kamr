@@ -126,11 +126,15 @@ export function HomePage() {
         style={{
           position: "fixed",
           bottom: 24,
-          left: "50%",
-          transform: "translateX(-50%)",
+          left: 16,
+          right: 16,
           display: "flex",
           gap: 12,
+          justifyContent: "center",
           zIndex: 40,
+          maxWidth: 688,
+          margin: "0 auto",
+          boxSizing: "border-box",
         }}
       >
         <PrimaryButton label="Join event" variant="outline" onClick={() => navigate("/app/join")} />

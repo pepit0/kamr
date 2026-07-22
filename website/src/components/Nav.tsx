@@ -34,7 +34,7 @@ export default function Nav() {
       style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200,
         height: 64, display: 'flex', alignItems: 'center',
-        padding: '0 40px', justifyContent: 'space-between',
+        padding: '0 clamp(16px, 5vw, 40px)', justifyContent: 'space-between',
         background: solid ? 'rgba(245,237,218,0.88)' : 'transparent',
         backdropFilter: solid ? 'blur(20px)' : 'none',
         WebkitBackdropFilter: solid ? 'blur(20px)' : 'none',

@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { MAX_EVENT_DURATION_DAYS } from "@kamr/shared";
+import { MAX_EVENT_DURATION_DAYS, parseLocalDateTimeInput, toLocalDateTimeInputValue } from "@kamr/shared";
 import { api, ApiError } from "@/lib/api";
 import {
   saveAdminSecret,
@@ -20,7 +20,7 @@ import { colors } from "@/lib/theme";
 export function CreatePage() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
-  const [startAt, setStartAt] = useState(defaultEventStartDate);
+  const [startAtInput, setStartAtInput] = useState(() => toLocalDateTimeInputValue(defaultEventStartDate()));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,10 +30,16 @@ export function CreatePage() {
     });
   }, [navigate]);
 
-  const { dateLine, timeLine } = formatEventDateTimeDisplay(startAt);
+  const startAt = useMemo(() => parseLocalDateTimeInput(startAtInput), [startAtInput]);
+  const { dateLine, timeLine } = formatEventDateTimeDisplay(startAt ?? defaultEventStartDate());
 
   const handleCreate = async () => {
     if (!name.trim()) return;
+
+    if (!startAt) {
+      setError("Enter a valid start date and time");
+      return;
+    }
 
     const validation = validateEventStartAtDate(startAt);
     if (validation) {
@@ -86,16 +92,21 @@ export function CreatePage() {
         >
           <input
             type="datetime-local"
-            value={toLocalInputValue(startAt)}
-            onChange={(e) => setStartAt(new Date(e.target.value))}
+            value={startAtInput}
+            onChange={(e) => {
+              setStartAtInput(e.target.value);
+              setError(null);
+            }}
             style={{
               width: "100%",
+              maxWidth: "100%",
+              boxSizing: "border-box",
               padding: "14px 16px",
               borderRadius: 12,
               border: `1px solid ${colors.brownBorder}`,
               backgroundColor: "rgba(255,255,255,0.35)",
               color: colors.brown,
-              fontSize: 15,
+              fontSize: 16,
             }}
           />
           <p style={{ fontSize: 13, color: colors.brownMuted, margin: "8px 0 0" }}>
@@ -115,9 +126,4 @@ export function CreatePage() {
       </div>
     </div>
   );
-}
-
-function toLocalInputValue(date: Date): string {
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }

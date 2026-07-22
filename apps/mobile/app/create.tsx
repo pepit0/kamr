@@ -25,7 +25,7 @@ export default function CreateEventScreen() {
   const router = useRouter();
   const { c } = useTheme();
   const [name, setName] = useState("");
-  const [startAt, setStartAt] = useState(defaultEventStartDate);
+  const [startAt, setStartAt] = useState(() => defaultEventStartDate());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
