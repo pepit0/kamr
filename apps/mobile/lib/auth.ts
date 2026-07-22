@@ -1,6 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { AuthResponse, LoginRequest, RegisterRequest, User } from "@kamr/shared";
-import { loginFailureMessage, USER_SESSION_KEY } from "@kamr/shared";
+import {
+  loginFailureMessage,
+  normalizeHandleInput,
+  USER_SESSION_KEY,
+  validateHandleForAccount,
+} from "@kamr/shared";
 import { api, ApiError } from "./api";
 
 export type { User };
@@ -59,9 +64,7 @@ export function handleInitials(handle: string): string {
   return handle.slice(0, 2).toUpperCase();
 }
 
-export function normalizeHandleInput(handle: string): string {
-  return handle.trim().toLowerCase().replace(/^@/, "");
-}
+export { normalizeHandleInput, validateHandleForAccount };
 
 export async function resolveLoginError(handle: string, err: unknown): Promise<string> {
   if (!(err instanceof ApiError)) {
@@ -70,8 +73,10 @@ export async function resolveLoginError(handle: string, err: unknown): Promise<s
   if (err.code !== "INVALID_CREDENTIALS") {
     return err.message;
   }
+  const { normalized, error } = validateHandleForAccount(handle);
+  if (error) return error;
   try {
-    const availability = await api.checkHandleAvailable(normalizeHandleInput(handle));
+    const availability = await api.checkHandleAvailable(normalized);
     return loginFailureMessage(availability);
   } catch {
     return err.message;

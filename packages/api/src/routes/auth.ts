@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import type { Context } from "hono";
 import type { Env, DbUser } from "../types";
 import {
   generateId,
@@ -23,6 +24,19 @@ type Variables = { user: DbUser };
 
 const auth = new Hono<{ Bindings: Env; Variables: Variables }>();
 
+async function readJson<T>(c: Context): Promise<T | Response> {
+  try {
+    return await c.req.json<T>();
+  } catch {
+    return c.json({ error: "Invalid request body", code: "INVALID_BODY" }, 400);
+  }
+}
+
+function isUniqueConstraintError(err: unknown): boolean {
+  const message = err instanceof Error ? err.message : String(err);
+  return /unique|UNIQUE constraint/i.test(message);
+}
+
 auth.get("/handles/:handle/available", async (c) => {
   const handle = normalizeHandle(c.req.param("handle"));
   const validation = validateHandle(handle);
@@ -38,7 +52,9 @@ auth.get("/handles/:handle/available", async (c) => {
 });
 
 auth.post("/register", async (c) => {
-  const body = await c.req.json<{ handle?: string; password?: string }>();
+  const body = await readJson<{ handle?: string; password?: string }>(c);
+  if (body instanceof Response) return body;
+
   const handle = normalizeHandle(body.handle ?? "");
   const password = body.password ?? "";
 
@@ -62,12 +78,19 @@ auth.post("/register", async (c) => {
   const passwordHash = await hashPassword(password, salt);
   const createdAt = nowIso();
 
-  await c.env.DB.prepare(
-    `INSERT INTO users (id, handle, display_name, password_hash, password_salt, created_at)
-     VALUES (?, ?, ?, ?, ?, ?)`
-  )
-    .bind(id, handle, handle, passwordHash, salt, createdAt)
-    .run();
+  try {
+    await c.env.DB.prepare(
+      `INSERT INTO users (id, handle, display_name, password_hash, password_salt, created_at)
+       VALUES (?, ?, ?, ?, ?, ?)`
+    )
+      .bind(id, handle, handle, passwordHash, salt, createdAt)
+      .run();
+  } catch (err) {
+    if (isUniqueConstraintError(err)) {
+      return c.json({ error: "That handle is already taken", code: "HANDLE_TAKEN" }, 409);
+    }
+    throw err;
+  }
 
   const user: DbUser = {
     id,
@@ -83,12 +106,19 @@ auth.post("/register", async (c) => {
 });
 
 auth.post("/login", async (c) => {
-  const body = await c.req.json<{ handle?: string; password?: string }>();
+  const body = await readJson<{ handle?: string; password?: string }>(c);
+  if (body instanceof Response) return body;
+
   const handle = normalizeHandle(body.handle ?? "");
   const password = body.password ?? "";
 
   if (!handle || !password) {
-    return c.json({ error: "Handle and password are required" }, 400);
+    return c.json({ error: "Handle and password are required", code: "MISSING_CREDENTIALS" }, 400);
+  }
+
+  const handleValidation = validateHandle(handle);
+  if (handleValidation) {
+    return c.json({ error: handleValidation, code: "INVALID_HANDLE" }, 400);
   }
 
   const user = await c.env.DB.prepare(

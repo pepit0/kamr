@@ -14,7 +14,7 @@ import type {
   Event,
   User,
 } from "@kamr/shared";
-import { USER_SESSION_KEY } from "@kamr/shared";
+import { USER_SESSION_KEY, apiErrorFromResponse, parseApiJson } from "@kamr/shared";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:8787";
@@ -69,9 +69,18 @@ async function request<T>(
       signal: controller.signal,
     });
 
-    const data = await response.json().catch(() => ({}));
+    const text = await response.text();
+    let data: unknown = {};
+    if (text) {
+      try {
+        data = parseApiJson(text);
+      } catch {
+        data = {};
+      }
+    }
     if (!response.ok) {
-      throw new ApiError(data.error ?? "Request failed", response.status, data.code);
+      const { message, code } = apiErrorFromResponse(response.status, data, text);
+      throw new ApiError(message, response.status, code);
     }
     return data as T;
   } catch (err) {

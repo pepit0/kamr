@@ -30,6 +30,14 @@ app.use("*", async (c, next) => {
 
 app.get("/health", (c) => c.json({ status: "ok" }));
 
+app.notFound((c) => c.json({ error: "Not found", code: "NOT_FOUND" }, 404));
+
+app.onError((err, c) => {
+  console.error(err);
+  const message = err instanceof Error ? err.message : "Internal server error";
+  return c.json({ error: message, code: "INTERNAL_ERROR" }, 500);
+});
+
 app.route("/auth", auth);
 app.route("/events", events);
 app.route("/albums", albums);

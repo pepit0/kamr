@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { login, normalizeHandleInput, resolveLoginError } from "@/lib/auth";
+import { login, resolveLoginError, validateHandleForAccount } from "@/lib/auth";
 import { ScreenHeader, PrimaryButton } from "@/components/ui/Buttons";
 import { FormField, StyledInput } from "@/components/ui/EventCard";
 import { PasswordInput } from "@/components/ui/PasswordInput";
@@ -13,11 +13,19 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const handleValidation = validateHandleForAccount(handle);
+  const canSubmit = !handleValidation.error && password.length > 0;
+
   const handleSubmit = async () => {
+    if (handleValidation.error) {
+      setError(handleValidation.error);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
-      await login({ handle: normalizeHandleInput(handle), password });
+      await login({ handle: handleValidation.normalized, password });
       const redirect = new URLSearchParams(window.location.search).get("redirect");
       navigate(redirect ?? "/app", { replace: true });
     } catch (err) {
@@ -55,7 +63,7 @@ export function LoginPage() {
         <PrimaryButton
           label="Sign in"
           onClick={handleSubmit}
-          disabled={!handle.trim() || !password}
+          disabled={!canSubmit}
           loading={loading}
           fullWidth
         />

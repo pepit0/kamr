@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { View, Text, Pressable } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { login, normalizeHandleInput, resolveLoginError } from "../lib/auth";
+import { login, resolveLoginError, validateHandleForAccount } from "../lib/auth";
 import { useTheme } from "../lib/theme/ThemeProvider";
 import { type } from "../lib/theme/typography";
 import { ScreenHeader, PrimaryButton } from "../components/ui/Buttons";
@@ -19,11 +19,19 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const handleValidation = validateHandleForAccount(handle);
+  const canSubmit = !handleValidation.error && password.length > 0;
+
   const handleSubmit = async () => {
+    if (handleValidation.error) {
+      setError(handleValidation.error);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
-      await login({ handle: normalizeHandleInput(handle), password });
+      await login({ handle: handleValidation.normalized, password });
       router.replace((redirect as string) ?? "/(tabs)");
     } catch (err) {
       setError(await resolveLoginError(handle, err));
@@ -42,7 +50,7 @@ export default function LoginScreen() {
           <PrimaryButton
             label="Sign in"
             onPress={handleSubmit}
-            disabled={!handle.trim() || !password}
+            disabled={!canSubmit}
             loading={loading}
           />
         </KeyboardFooter>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api, ApiError } from "@/lib/api";
-import { getAccount, login, normalizeHandleInput, resolveLoginError } from "@/lib/auth";
+import { getAccount, login, resolveLoginError, validateHandleForAccount } from "@/lib/auth";
 import { saveLocalEvent, saveParticipantSecret } from "@/lib/storage";
 import { ScreenHeader, PrimaryButton } from "@/components/ui/Buttons";
 import { FormField, StyledInput } from "@/components/ui/EventCard";
@@ -78,7 +78,12 @@ export function JoinPage() {
           setError("Enter your handle and password to join with your account");
           return;
         }
-        const user = await login({ handle: normalizeHandleInput(loginHandle), password: loginPassword });
+        const { normalized, error: handleError } = validateHandleForAccount(loginHandle);
+        if (handleError) {
+          setError(handleError);
+          return;
+        }
+        const user = await login({ handle: normalized, password: loginPassword });
         setAccount(user);
         await completeJoin(displayName.trim() || user.displayName);
         return;

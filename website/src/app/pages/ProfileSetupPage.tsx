@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api, ApiError } from "@/lib/api";
-import { register, normalizeHandleInput } from "@/lib/auth";
+import { register, validateHandleForAccount } from "@/lib/auth";
 import { ScreenHeader, PrimaryButton } from "@/components/ui/Buttons";
 import { FormField, StyledInput } from "@/components/ui/EventCard";
 import { PasswordInput } from "@/components/ui/PasswordInput";
@@ -16,9 +16,9 @@ export function ProfileSetupPage() {
   const [error, setError] = useState<string | null>(null);
 
   const handleSave = async () => {
-    const normalized = normalizeHandleInput(handle);
-    if (!normalized) {
-      setError("Choose a handle");
+    const { normalized, error: handleError } = validateHandleForAccount(handle);
+    if (handleError) {
+      setError(handleError);
       return;
     }
     if (password.length < 8) {
